@@ -64,9 +64,13 @@ module Fluent
       def on_timer
         now = Fluent::EventTime.now
         update_cache()
+        es = Fluent::MultiEventStream.new
         for method in @collectors do
-            router.emit(@tag, now, method.call())
+            for record in method.call() do
+                es.add(now, record)
+            end
         end
+        router.emit_stream(@tag, es)
       end
 
       def update_cache
@@ -75,13 +79,13 @@ module Fluent
       end
 
       def collect_time
-         return {
+         return [{
             :type => "counter",
             :labels => {},
             :desc =>  "System time in seconds since epoch (1970)",
             :timestamp => Fluent::EventTime.now.to_f,
             :value => Fluent::EventTime.now.to_f
-        }
+        }]
       end
     end
   end
