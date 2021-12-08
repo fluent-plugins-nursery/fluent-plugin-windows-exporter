@@ -26,10 +26,30 @@ module Fluent
       config_param :tag, :string, default: nil
       desc "The interval time between data collection"
       config_param :interval, :time, default: 5
+      desc "Enable cpu collector"
+      config_param :cpu, :bool, default: true
+      desc "Enable disk collector"
+      config_param :logical_disk, :bool, default: true
+      desc "Enable memory collector"
+      config_param :memory, :bool, default: true
+      desc "Enable network collector"
+      config_param :net, :bool, default: true
+      desc "Enable time collector"
+      config_param :time, :bool, default: true
+      desc "Enable OS collector"
+      config_param :os, :bool, default: true
 
       def configure(conf)
         super
         @cache = nil
+
+        @collectors = []
+        #@collectors << method(:collect_cpu) if @cpu
+        #@collectors << method(:collect_logical_disk) if @logical_disk
+        #@collectors << method(:collect_memory) if @memory
+        #@collectors << method(:collect_net) if @net
+        @collectors << method(:collect_time) if @time
+        #@collectors << method(:collect_os) if @os
       end
 
       def start
@@ -40,8 +60,9 @@ module Fluent
       def on_timer
         now = Fluent::EventTime.now
         update_cache()
-        record = collect()
-        router.emit(@tag, now, record)
+        for method in @collectors do
+            router.emit(@tag, now, method.call())
+        end
       end
 
       def update_cache
@@ -49,9 +70,14 @@ module Fluent
         # Save them to @cache.
       end
 
-      def collect
-        # Return @cache in Prometheus format.
-        return {}
+      def collect_time
+         return {
+            :type => "counter",
+            :labels => {},
+            :desc =>  "System time in seconds since epoch (1970)",
+            :timestamp => Fluent::EventTime.now.to_f,
+            :value => Fluent::EventTime.now.to_f
+        }
       end
 
       def shutdown
