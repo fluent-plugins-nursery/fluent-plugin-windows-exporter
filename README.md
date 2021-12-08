@@ -38,6 +38,6 @@ You can copy and paste generated documents here.
 
 ## Copyright
 
-* Copyright(c) 2021- Fujimoto Seiji
+* Copyright(c) 2021- Fujimoto Seiji, Fukuda Daijiro
 * License
   * Apache License, Version 2.0
