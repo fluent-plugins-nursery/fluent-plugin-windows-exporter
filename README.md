@@ -2,7 +2,33 @@
 
 [Fluentd](https://fluentd.org/) input plugin to do something.
 
-TODO: write description for you plugin.
+## How to start development
+
+ 1. Install Git for Windows
+ 2. Install td-agent (see https://docs.fluentd.org/installation/install-by-msi)
+ 3. Clone this repository on Windows
+    ```console
+    $ git clone https://github.com/fluent-plugins-nursery/fluent-plugin-windows-exporter/
+    ```
+ 4. Open `TD Agent Command Prompt` and type as follows:
+    ```console
+    $ cd fluent-plugin-windows-exporter
+    $ td-agent-gem build fluent-plugin-windows-exporter.gemspec
+    $ td-agent-gem install fluent-plugin-windows-exporter*.gem
+    ```
+ 5. Run Fluentd as follows:
+    ```console
+    $ type test.conf
+    <source>
+      @type windows_exporter
+      tag test.log
+      scrape_interval 3
+    </source>
+    <match test.**>
+      @type stdout
+    </match>
+    $ fluentd -c test.conf
+    ```
 
 ## Installation
 
