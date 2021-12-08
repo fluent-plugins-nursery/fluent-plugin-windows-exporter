@@ -25,7 +25,7 @@ module Fluent
       desc "Tag of the output events"
       config_param :tag, :string, default: nil
       desc "The interval time between data collection"
-      config_param :interval, :time, default: 5
+      config_param :scrape_interval, :time, default: 5
       desc "Enable cpu collector"
       config_param :cpu, :bool, default: true
       desc "Enable disk collector"
@@ -54,7 +54,11 @@ module Fluent
 
       def start
         super
-        timer_execute(:in_windows_exporter, @interval, &method(:on_timer))
+        timer_execute(:in_windows_exporter, @scrape_interval, &method(:on_timer))
+      end
+
+      def shutdown
+        super
       end
 
       def on_timer
@@ -78,9 +82,6 @@ module Fluent
             :timestamp => Fluent::EventTime.now.to_f,
             :value => Fluent::EventTime.now.to_f
         }
-      end
-
-      def shutdown
       end
     end
   end
