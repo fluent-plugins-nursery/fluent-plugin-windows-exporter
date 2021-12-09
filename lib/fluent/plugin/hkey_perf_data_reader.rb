@@ -95,7 +95,7 @@ module HKeyPerfDataReader
         )
 
         perf_object.add_counter(counter)
-        cur_offset += counter_def.counterSize
+        cur_offset += counter_def.byteLength
       end
 
       return perf_object, object_type.totalByteLength
