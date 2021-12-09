@@ -1,5 +1,5 @@
 #
-# Copyright 2021- daipom
+# Copyright 2021- Fujimoto Seiji, Fukuda Daijiro
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 # limitations under the License.
 
 require 'fiddle/import'
+require 'bindata'
 
 module HKeyPerfDataReader
   class Reader
