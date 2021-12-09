@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'fiddle/import'
-require './hkey_perf_data_raw_type.rb'
-require './hkey_perf_data_converted_type.rb'
+require "fiddle/import"
+require "./hkey_perf_data_raw_type.rb"
+require "./hkey_perf_data_converted_type.rb"
 
 module HKeyPerfDataReader
   class Reader
@@ -58,7 +58,7 @@ module HKeyPerfDataReader
     def read
       type = packdw(0)
       size = packdw(128*1024*1024) # 128kb (for now)
-      data = "\0".force_encoding('ASCII-8BIT') * unpackdw(size)
+      data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
       ret = API::RegQueryValueExW.call(Constants::HKEY_PERFORMANCE_DATA, "Global", 0, type, data, size)
       data
     end
@@ -82,12 +82,12 @@ module HKeyPerfDataReader
     end
 
     def packdw(dw)
-      [dw].pack('V')
+      [dw].pack("V")
     end
     
     def unpackdw(dw)
-      dw += [0].pack('V')
-      dw.unpack('V')[0]
+      dw += [0].pack("V")
+      dw.unpack("V")[0]
     end
   end
 end

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require './hkey_perf_data_raw_type.rb'
+require "./hkey_perf_data_raw_type.rb"
 
 module HKeyPerfDataReader::ConvertedType
   class PerfDataBlock
