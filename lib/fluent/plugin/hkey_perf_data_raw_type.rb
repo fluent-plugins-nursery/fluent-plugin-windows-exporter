@@ -34,5 +34,37 @@ module HKeyPerfDataReader
       # uint32 :systemNameLength
       # uint32 :systemNameOffset
     end
+
+    class PerfObjectType < BinData::Record
+      endian :big_and_little
+      uint32 :totalByteLength
+      uint32 :definitionLength
+      uint32 :headerLength
+      uint32 :objectNameTitleIndex
+      uint32 :objectNameTitle
+      uint32 :objectHelpTitleIndex
+      uint32 :objectHelpTitle
+      uint32 :detailLevel
+      uint32 :numCounters
+      int32 :defaultCounter
+      int32 :numInstances
+      uint32 :codePage
+      int64 :perfTime
+      int64 :perfFreq
+    end
+
+    class PerfCounterDefinition < BinData::Record
+      endian :big_and_little
+      uint32 :byteLength
+      uint32 :counterNameTitleIndex
+      uint32 :counterNameTitle
+      uint32 :counterHelpTitleIndex
+      uint32 :counterHelpTitle
+      int32 :defaultScale
+      uint32 :detailLevel
+      uint32 :counterType
+      uint32 :counterSize
+      uint32 :counterOffset
+    end
   end
 end

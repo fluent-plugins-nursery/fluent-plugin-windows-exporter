@@ -22,7 +22,7 @@ module HKeyPerfDataReader
     def read
       raw_data = RawReader.new.read
       puts("header=#{raw_data[0..7]}") # for debug
-      puts("#{raw_data[0..30].chars.map { |c| c.unpack("H*")[0] }}") # for debug
+      puts("#{raw_data[0..7].chars.map { |c| c.unpack("H*")[0] }}") # for debug
 
       endian = little_endian?(raw_data) ? :little : :big
       puts("endian=#{endian}") # for debug
@@ -37,9 +37,25 @@ module HKeyPerfDataReader
         return nil
       end
 
-      header
+      perf_objects = {}
 
-      # TODO read each performance block and return
+      offset = header.headerLength
+      header.numObjectTypes.times do
+        begin
+          # TODO get name and value of each object and counter
+          perf_object, total_byte_length = read_perf_object(raw_data, endian, offset)
+
+          # for deubg
+          puts "parse object: #{perf_object.name}, counters: #{perf_object.counters.map {|c| 'name: ' + c.name + ', val: ' + c.value}}"
+
+          perf_objects[perf_object.name] = perf_object
+          offset += total_byte_length
+        rescue => e
+          p "error occurred: #{e.message}"
+        end
+      end
+
+      perf_objects
     end
 
     private
@@ -49,8 +65,45 @@ module HKeyPerfDataReader
     end
 
     def read_header(raw_data, endian)
-      raw_perf_data_block = RawType::PerfDataBlock.new(:endian => endian).read(raw_data)
+      raw_perf_data_block = RawType::PerfDataBlock.new(:endian => endian)
+        .read(raw_data).snapshot
       ConvertedType::PerfDataBlock.new(raw_perf_data_block)
+    end
+
+    def read_perf_object(raw_data, endian, start_offset)
+      cur_offset = start_offset
+
+      object_type = RawType::PerfObjectType.new(:endian => endian)
+        .read(raw_data[cur_offset..]).snapshot
+      cur_offset += object_type.headerLength
+
+      perf_object = ConvertedType::PerfObject.new(
+        RawReader.new.read_name_table(object_type.objectNameTitleIndex)
+      )
+
+      object_type.numCounters.times do
+        counter_def = RawType::PerfCounterDefinition.new(:endian => endian)
+          .read(raw_data[cur_offset..]).snapshot
+
+        counter = ConvertedType::PerfCounter.new(
+          RawReader.new.read_name_table(counter_def.counterNameTitleIndex)
+        )
+        counter.value = read_counter_value(
+          raw_data,
+          counter_def,
+          start_offset + object_type.definitionLength + counter_def.counterOffset,
+        )
+
+        perf_object.add_counter(counter)
+        cur_offset += counter_def.counterSize
+      end
+
+      return perf_object, object_type.totalByteLength
+    end
+
+    def read_counter_value(raw_data, counter_def, offset)
+      # TODO implementation
+      raw_data[offset..counter_def.counterSize]
     end
   end
 
@@ -59,8 +112,20 @@ module HKeyPerfDataReader
       type = packdw(0)
       size = packdw(128*1024*1024) # 128kb (for now)
       data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
-      ret = API::RegQueryValueExW.call(Constants::HKEY_PERFORMANCE_DATA, "Global", 0, type, data, size)
+      ret = API::RegQueryValueExW.call(Constants::HKEY_PERFORMANCE_DATA, make_wstr("Global"), 0, type, data, size)
+      puts("RegQueryValueExW : ret=#{ret}") # for debug
+
+      # https://docs.microsoft.com/en-us/windows/win32/perfctrs/using-the-registry-functions-to-consume-counter-data
+      # TODO The document above says we must call `RegCloseKey`, but this returns error code: 6 (ERROR_INVALID_HANDLE)
+      ret = API::RegCloseKey.call(Constants::HKEY_PERFORMANCE_DATA)
+      puts("RegCloseKey : ret=#{ret}") # for debug
+
       data
+    end
+
+    def read_name_table(index)
+      # TODO implementation
+      index.to_s
     end
 
     private
@@ -75,6 +140,7 @@ module HKeyPerfDataReader
       dlload "advapi32.dll"
       [
         "long RegQueryValueExW(void *, void *, void *, void *, void *, void *)",
+        "long RegCloseKey(void *)",
       ].each do |fn|
         cfunc = extern fn, :stdcall
         const_set cfunc.name.intern, cfunc
@@ -88,6 +154,10 @@ module HKeyPerfDataReader
     def unpackdw(dw)
       dw += [0].pack("V")
       dw.unpack("V")[0]
+    end
+
+    def make_wstr(str)
+      str.encode(Encoding::UTF_16LE)
     end
   end
 end
