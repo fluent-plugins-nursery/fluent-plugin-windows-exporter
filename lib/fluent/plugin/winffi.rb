@@ -28,6 +28,30 @@ module WinFFI
     ])
   end
 
+  # https://docs.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getperformanceinfo
+  module Psapi
+    extend Fiddle::Importer
+    dlload "Psapi.dll"
+    include Fiddle::Win32Types
+    extern "BOOL GetPerformanceInfo(void*, DWORD)"
+    PERFORMANCE_INFORMATION = struct([
+      "DWORD cb",
+      "size_t CommitTotal",
+      "size_t CommitLimit",
+      "size_t CommitPeak",
+      "size_t PhysicalTotal",
+      "size_t PhysicalAvailable",
+      "size_t SystemCache",
+      "size_t KernelTotal",
+      "size_t KernelPaged",
+      "size_t KernelNonpaged",
+      "size_t PageSize",
+      "DWORD HandleCount",
+      "DWORD ProcessCount",
+      "DWORD ThreadCount"
+    ])
+  end
+
   # https://docs.microsoft.com/en-us/windows/win32/api/lmwksta/nf-lmwksta-netwkstagetinfo
   module NetAPI32
     extend Fiddle::Importer
@@ -80,11 +104,35 @@ module WinFFI
     info = NetAPI32::WKSTA_INFO_102.new(ptr)
     ret = {
       :PlatformID => info.wki102_platform_id,
-      :MajorVer => info.wki102_ver_major,
-      :MinorVer => info.wki102_ver_minor,
+      :VersionMajor => info.wki102_ver_major,
+      :VersionMinor => info.wki102_ver_minor,
       :LoggedOnUsers => info.wki102_logged_on_users
     }
     NetAPI32.NetApiBufferFree(ptr)
     return ret
+  end
+
+  def self.GetPerformanceInfo()
+    buf = Psapi::PERFORMANCE_INFORMATION.malloc
+    size = Psapi::PERFORMANCE_INFORMATION.size
+    buf.cb = size
+    if not Psapi.GetPerformanceInfo(buf, size)
+      return nil
+    end
+    return {
+      :CommitTotal => buf.CommitTotal,
+      :CommitLimit => buf.CommitLimit,
+      :CommitPeak => buf.CommitPeak,
+      :PhysicalTotal => buf.PhysicalTotal,
+      :PhysicalAvailable => buf.PhysicalAvailable,
+      :SystemCache => buf.SystemCache,
+      :KernelTotal => buf.KernelTotal,
+      :KernelPaged => buf.KernelPaged,
+      :KernelNonpaged => buf.KernelNonpaged,
+      :PageSize => buf.PageSize,
+      :HandleCount => buf.HandleCount,
+      :ProcessCount => buf.ProcessCount,
+      :ThreadCount => buf.ThreadCount
+    }
   end
 end
