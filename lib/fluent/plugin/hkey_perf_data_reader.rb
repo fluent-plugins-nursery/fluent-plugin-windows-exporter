@@ -46,7 +46,11 @@ module HKeyPerfDataReader
           perf_object, total_byte_length = read_perf_object(raw_data, endian, offset)
 
           # for deubg
-          puts "parse object: #{perf_object.name}, counters: #{perf_object.counters.map {|c| 'name: ' + c.name + ', val: ' + c.value}}"
+          puts("object name: #{perf_object.name}")
+          perf_object.counters.each do |c|
+            puts("  counter name: #{c.name}, value: #{c.value}")
+          end
+          puts
 
           perf_objects[perf_object.name] = perf_object
           offset += total_byte_length
@@ -90,6 +94,7 @@ module HKeyPerfDataReader
         )
         counter.value = read_counter_value(
           raw_data,
+          endian,
           counter_def,
           start_offset + object_type.definitionLength + counter_def.counterOffset,
         )
@@ -101,9 +106,19 @@ module HKeyPerfDataReader
       return perf_object, object_type.totalByteLength
     end
 
-    def read_counter_value(raw_data, counter_def, offset)
-      # TODO implementation
-      raw_data[offset..counter_def.counterSize]
+    def read_counter_value(raw_data, endian, counter_def, offset)
+      # Currently counter data is limited to DWORD and ULONGLONG data types
+      #   ref: https://docs.microsoft.com/en-us/windows/win32/perfctrs/retrieving-counter-data
+      # We don't need to consider `counterType` unless we need to format the value for output.
+      endian_mark = endian == "little" ? "<" : ">"
+      case counter_def.counterSize
+      when 4
+        return raw_data[offset..offset+3].unpack("L#{endian_mark}")
+      when 8
+        return raw_data[offset..offset+7].unpack("Q#{endian_mark}")
+      else
+        return raw_data[offset..offset+3].unpack("L#{endian_mark}")
+      end
     end
   end
 
