@@ -1,5 +1,6 @@
 require "fiddle/import"
 require "fiddle/types"
+require "win32/registry"
 
 # This module is a thin wrapper over Win32 API. Use this as follows:
 #
@@ -134,5 +135,21 @@ module WinFFI
       :ProcessCount => buf.ProcessCount,
       :ThreadCount => buf.ThreadCount
     }
+  end
+
+  def self.GetRegistryInfo()
+    info = {}
+    pagesize = 0
+    Win32::Registry::HKEY_LOCAL_MACHINE.open('SOFTWARE\Microsoft\Windows NT\CurrentVersion') do |reg|
+      info[:ProductName] = reg["ProductName"]
+      info[:CurrentBuildNumber] = reg["CurrentBuildNumber"]
+    end
+    Win32::Registry::HKEY_LOCAL_MACHINE.open('SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management') do |reg|
+      for path in reg['ExistingPageFiles', Win32::Registry::REG_MULTI_SZ] do
+        pagesize += File.stat(path.gsub("\\??\\", "")).size
+      end
+    end
+    info[:PagingLimitBytes] = pagesize
+    return info
   end
 end
