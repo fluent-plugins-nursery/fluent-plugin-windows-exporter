@@ -17,15 +17,15 @@ module WinFFI
     include Fiddle::Win32Types
     extern "int GlobalMemoryStatusEx(void*)"
     MemoryStatusEx = struct([
-        "DWORD dwLength",
-        "DWORD dwMemoryLoad",
-        "DWORD64 ullTotalPhys",
-        "DWORD64 ullAvailPhys",
-        "DWORD64 ullTotalPageFile",
-        "DWORD64 ullAvailPageFile",
-        "DWORD64 ullTotalVirtual",
-        "DWORD64 ullAvailVirtual",
-        "DWORD64 ullAvailExtendedVirtual",
+      "DWORD dwLength",
+      "DWORD dwMemoryLoad",
+      "DWORD64 ullTotalPhys",
+      "DWORD64 ullAvailPhys",
+      "DWORD64 ullTotalPageFile",
+      "DWORD64 ullAvailPageFile",
+      "DWORD64 ullTotalVirtual",
+      "DWORD64 ullAvailVirtual",
+      "DWORD64 ullAvailExtendedVirtual",
     ])
   end
 
@@ -60,7 +60,6 @@ module WinFFI
     include Fiddle::Win32Types
     extern "DWORD NetWkstaGetInfo(void *, DWORD, void*)"
     extern "DWORD NetWkstaUserGetInfo(void*, DWORD, void*)"
-    extern "DWORD NetWkstaUserGetInfo(void*)"
     extern "DWORD NetApiBufferFree(void*)"
 
     WKSTA_INFO_102 = struct([
@@ -82,13 +81,13 @@ module WinFFI
     end
 
     return {
-        :TotalPhys => buf.ullTotalPhys,
-        :AvailPhys => buf.ullAvailPhys,
-        :TotalPageFile => buf.ullTotalPageFile,
-        :AvailPageFile => buf.ullAvailPageFile,
-        :TotalVirtual => buf.ullTotalVirtual,
-        :AvailVirtual => buf.ullAvailVirtual,
-        :AvailExtendedVirtual => buf.ullAvailExtendedVirtual
+      :TotalPhys => buf.ullTotalPhys,
+      :AvailPhys => buf.ullAvailPhys,
+      :TotalPageFile => buf.ullTotalPageFile,
+      :AvailPageFile => buf.ullAvailPageFile,
+      :TotalVirtual => buf.ullTotalVirtual,
+      :AvailVirtual => buf.ullAvailVirtual,
+      :AvailExtendedVirtual => buf.ullAvailExtendedVirtual
     }
   end
 
