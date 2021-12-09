@@ -5,16 +5,16 @@
 ## How to start development
 
  1. Install Git for Windows
- 2. Install td-agent (see https://docs.fluentd.org/installation/install-by-msi)
+ 2. Install Ruby with devkit from https://rubyinstaller.org/
  3. Clone this repository on Windows
     ```console
     $ git clone https://github.com/fluent-plugins-nursery/fluent-plugin-windows-exporter/
     ```
- 4. Open `TD Agent Command Prompt` and type as follows:
+ 4. Run the following
     ```console
     $ cd fluent-plugin-windows-exporter
-    $ td-agent-gem build fluent-plugin-windows-exporter.gemspec
-    $ td-agent-gem install fluent-plugin-windows-exporter*.gem
+    $ gem install bundler --version=2.1.4
+    $ bundle install
     ```
  5. Run Fluentd as follows:
     ```console
@@ -27,7 +27,7 @@
     <match test.**>
       @type stdout
     </match>
-    $ fluentd -c test.conf
+    $ bundle exec fluentd -c test.conf
     ```
 
 ## Installation
