@@ -14,7 +14,8 @@
 # limitations under the License.
 
 require 'fiddle/import'
-require 'bindata'
+require './hkey_perf_data_raw_type.rb'
+require './hkey_perf_data_converted_type.rb'
 
 module HKeyPerfDataReader
   class Reader
@@ -22,6 +23,34 @@ module HKeyPerfDataReader
       raw_data = RawReader.new.read
       puts("header=#{raw_data[0..7]}") # for debug
       puts("#{raw_data[0..30].chars.map { |c| c.unpack("H*")[0] }}") # for debug
+
+      endian = little_endian?(raw_data) ? :little : :big
+      puts("endian=#{endian}") # for debug
+
+      header = read_header(raw_data, endian)
+      puts("signature=#{header.signature}") # for debug
+      puts("headerLength=#{header.headerLength}") # for debug
+      puts("numObjectTypes=#{header.numObjectTypes}") # for debug
+
+      unless header.signature == "PERF"
+        p "Invalid performance block header"
+        return nil
+      end
+
+      header
+
+      # TODO read each performance block and return
+    end
+
+    private
+
+    def little_endian?(raw_data)
+      return raw_data[8..11].unpack("I*")[0] == 1
+    end
+
+    def read_header(raw_data, endian)
+      raw_perf_data_block = RawType::PerfDataBlock.new(:endian => endian).read(raw_data)
+      ConvertedType::PerfDataBlock.new(raw_perf_data_block)
     end
   end
 
