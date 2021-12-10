@@ -79,14 +79,14 @@ module Fluent
       end
 
       def update_cache
-        # Get system counters from WMI and HKEY_PERFORMANCE_DATA.
+        # Get system counters from HKEY_PERFORMANCE_DATA.
         # Save them to @cache.
       end
 
       def collect_time
          return [{
-            :type => "counter",
-            :name => "windows.time",
+            :type => "gauge",
+            :name => "windows_time",
             :desc =>  "System time in seconds since epoch (1970)",
             :labels => {},
             :timestamp => Fluent::EventTime.now.to_f,
@@ -103,7 +103,7 @@ module Fluent
         return [
           {
             :type => "gauge",
-            :name => "windows.os.info",
+            :name => "windows_os_info",
             :desc => "OperatingSystem.Caption, OperatingSystem.Version",
             :labels => {
               :product => "Microsoft #{reg[:ProductName]}",
@@ -111,43 +111,44 @@ module Fluent
             },
             :value => 1.0
           },
+          {
             :type => "gauge",
-            :name => "windows.os.physical_memory_free_bytes",
+            :name => "windows_os_physical_memory_free_bytes",
             :desc => "OperatingSystem.FreePhysicalMemory",
             :labels => {},
             :value => mem[:AvailPhys]
           },
           {
             :type => "gauge",
-            :name => "windows.os.time",
+            :name => "windows_os_time",
             :desc => "OperatingSystem.LocalDateTime",
             :labels => {},
             :value => Fluent::EventTime.now.to_f
           },
           {
             :type => "gauge",
-            :name => "windows.os.timezone",
+            :name => "windows_os_timezone",
             :desc => "OperatingSystem.LocalDateTime",
             :labels => {:timezone => Time.now.zone},
             :value => 1.0
           },
           {
             :type => "gauge",
-            :name => "windows.os.paging_free_bytes",
+            :name => "windows_os_paging_free_bytes",
             :desc => "OperatingSystem.FreeSpaceInPagingFiles",
             :labels => {},
             :value => 0  # TODO: Implement using HKEY_PERFORMANCE_DATA
           },
           {
             :type => "gauge",
-            :name => "windows.os.virtual_memory_free_bytes",
+            :name => "windows_os_virtual_memory_free_bytes",
             :desc => "OperatingSystem.FreeVirtualMemory",
             :labels => {},
             :value => mem[:AvailPageFile]
           },
           {
             :type => "gauge",
-            :name => "windows.os.processes_limit",
+            :name => "windows_os_processes_limit",
             :desc => "OperatingSystem.MaxNumberOfProcesses",
             :labels => {},
             # prometheus-community/windows-exporter/collector/os.go#L275
@@ -155,42 +156,42 @@ module Fluent
           },
           {
             :type => "gauge",
-            :name => "windows.os.process_memory_limit_bytes",
+            :name => "windows_os_process_memory_limit_bytes",
             :desc => "OperatingSystem.MaxProcessMemorySize",
             :labels => {},
             :value => mem[:TotalVirtual]
           },
           {
             :type => "gauge",
-            :name => "windows.os.processes",
+            :name => "windows_os_processes",
             :desc => "OperatingSystem.NumberOfProcesses",
             :labels => {},
             :value => perf[:ProcessCount]
           },
           {
             :type => "gauge",
-            :name => "windows.os.users",
+            :name => "windows_os_users",
             :desc => "OperatingSystem.NumberOfUsers",
             :labels => {},
             :value => work[:LoggedOnUsers]
           },
           {
             :type => "gauge",
-            :name => "windows.os.paging_limit_bytes",
+            :name => "windows_os_paging_limit_bytes",
             :desc => "OperatingSystem.SizeStoredInPagingFiles",
             :labels => {},
             :value => reg[:PagingLimitBytes]
           },
           {
             :type => "gauge",
-            :name => "windows.os.virtual_memory_bytes",
+            :name => "windows_os_virtual_memory_bytes",
             :desc => "OperatingSystem.TotalVirtualMemorySize",
             :labels => {},
             :value => mem[:TotalPageFile],
           },
           {
             :type => "gauge",
-            :name => "windows.os.visible_memory_bytes",
+            :name => "windows_os_visible_memory_bytes",
             :desc => "OperatingSystem.TotalVisibleMemorySize",
             :labels => {},
             :value => mem[:TotalPhys]
