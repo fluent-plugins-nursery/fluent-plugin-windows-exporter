@@ -91,7 +91,7 @@ module Fluent
           :name => "memory_test",
           :desc =>  "Memory.Committed Bytes",
           :labels => {},
-          :value => @cache["Memory"].counters["Committed Bytes"]
+          :value => @cache["Memory"].instances[0].counters["Committed Bytes"]
         }]
       end
 

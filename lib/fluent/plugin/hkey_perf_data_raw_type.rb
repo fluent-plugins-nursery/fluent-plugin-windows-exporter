@@ -69,5 +69,22 @@ module HKeyPerfDataReader
       uint32 :counterSize
       uint32 :counterOffset
     end
+
+    # https://docs.microsoft.com/en-us/windows/win32/api/winperf/ns-winperf-perf_counter_block
+    class PerfCounterBlock < BinData::Record
+      endian :big_and_little
+      uint32 :byteLength
+    end
+
+    # https://docs.microsoft.com/en-us/windows/win32/api/winperf/ns-winperf-perf_instance_definition
+    class PerfInstanceDefinition < BinData::Record
+      endian :big_and_little
+      uint32 :byteLength
+      uint32 :parentObjectTitleIndex
+      uint32 :parentObjectInstance
+      uint32 :uniqueID
+      uint32 :nameOffset
+      uint32 :nameLength
+    end
   end
 end

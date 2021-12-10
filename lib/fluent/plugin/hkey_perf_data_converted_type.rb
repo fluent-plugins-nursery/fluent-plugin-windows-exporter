@@ -36,6 +36,42 @@ module HKeyPerfDataReader::ConvertedType
 
   class PerfObject
     attr_reader :name
+    attr_reader :instances
+    attr_reader :counter_defs
+
+    def initialize(name)
+      @name = name
+      @instances = []
+      @counter_defs = []
+    end
+
+    def instance_names
+      @instances.map { |i| i.name }
+    end
+
+    def add_counter_def(counter_def)
+      @counter_defs.append(counter_def)
+    end
+
+    def add_instance(perf_instance)
+      @instances.append(perf_instance)
+    end
+  end
+
+  class PerfCounterDef
+    attr_reader :name
+    attr_reader :counter_offset
+    attr_reader :counter_size
+
+    def initialize(name, raw_counter_def)
+      @name = name
+      @counter_offset = raw_counter_def.counterOffset
+      @counter_size = raw_counter_def.counterSize
+    end
+  end
+
+  class PerfInstance
+    attr_reader :name
     attr_reader :counters
 
     def initialize(name)

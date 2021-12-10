@@ -26,8 +26,21 @@ require_relative "hkey_perf_data_converted_type"
 #   require_relative "hkey_perf_data_reader"
 #   reader = HKeyPerfDataReader::Reader.new
 #   data = reader.read
-#   data["Memory"].counters
-#     => {:Page Faults/sec=>1097060125, :Available Bytes=>6256005120,  ... }
+#   data.keys
+#     => ["RAS", "WSMan Quota Statistics", "Event Log", ...]
+#   data["Memory"].instances[0].counters
+#     => {"Page Faults/sec"=>1097060125, "Available Bytes"=>6256005120,  ...}
+#   data["Processor"].instance_names
+#     => ["0", "1", "2", "3", "_Total", "Not found", ...]
+#     Note. "Not found": This can not take some instance names correctly yet.
+#   data["Processor"].instances[5].name
+#     => "_Total"
+#   data["Processor"].instances[5].counters
+#     => {"% Processor Time"=>1880217871093, "% User Time"=>41857187500, ...}
+#
+# Public API:
+#   * HKeyPerfDataReader::Reader#read()
+#      return hash of PerfObject
 
 module HKeyPerfDataReader
   module Constants
@@ -55,7 +68,7 @@ module HKeyPerfDataReader
       print_debug("numObjectTypes=#{header.numObjectTypes}")
 
       unless header.signature == "PERF"
-        puts("Invalid performance block header")
+        puts("HKeyPerfDataReader: Invalid performance block header")
         return nil
       end
 
@@ -63,16 +76,23 @@ module HKeyPerfDataReader
 
       offset = header.headerLength
       header.numObjectTypes.times do
-        begin
-          perf_object, total_byte_length = read_perf_object(offset)
-
-          print_debug_perf_object(perf_object)
-
-          perf_objects[perf_object.name] = perf_object
-          offset += total_byte_length
-        rescue => e
-          puts("error occurred: #{e.message}")
+        perf_object, total_byte_length, success = read_perf_object(offset)
+        unless success
+          if total_byte_length.nil?
+            print_debug("HKeyPerfDataReader: Can not continue. Stop reading.")
+            break
+          else
+            print_debug("HKeyPerfDataReader: Skip this object and continue reading.")
+            offset += total_byte_length
+            next
+          end
         end
+
+        print_debug_perf_object(perf_object)
+
+        # TODO some object names are nil. Exclude them temporarily.
+        perf_objects[perf_object.name] = perf_object unless perf_object.name.nil?
+        offset += total_byte_length
       end
 
       perf_objects
@@ -87,7 +107,11 @@ module HKeyPerfDataReader
 
     def print_debug_perf_object(perf_object)
       print_debug("object name: #{perf_object.name}")
-      print_debug("counters: #{perf_object.counters}")
+      perf_object.instances.each do |instance|
+        print_debug("  instance: #{instance.name}")
+        print_debug("    counters: #{instance.counters}")
+        print_debug("")
+      end
       print_debug("")
     end
 
@@ -101,36 +125,119 @@ module HKeyPerfDataReader
       ConvertedType::PerfDataBlock.new(raw_perf_data_block)
     end
 
-    def read_perf_object(start_offset)
-      cur_offset = start_offset
+    def read_perf_object(object_start_offset)
+      cur_offset = object_start_offset
 
       object_type = RawType::PerfObjectType.new(:endian => endian)
         .read(@raw_data[cur_offset..]).snapshot
-      unless object_type.numInstances == PERF_NO_INSTANCES
-        # TODO handle multi instance
-        print_debug("numInstances: #{object_type.numInstances}")
-      end
       cur_offset += object_type.headerLength
 
       perf_object = ConvertedType::PerfObject.new(
         @counter_name_reader.read(object_type.objectNameTitleIndex)
       )
 
-      object_type.numCounters.times do
+      print_debug("object name: #{perf_object.name}")
+
+      cur_offset = set_couner_defs_to_object(
+        perf_object, object_type.numCounters, cur_offset
+      )
+
+      if object_type.numInstances == PERF_NO_INSTANCES || object_type.numInstances == 0
+        set_counters_to_no_instance_object(
+          perf_object,
+          object_start_offset + object_type.definitionLength,
+        )
+      else
+        set_counters_to_multiple_instance_object(
+          perf_object,
+          object_type.numCounters,
+          object_start_offset + object_type.definitionLength,
+        )
+      end
+
+      return perf_object, object_type.totalByteLength, true
+    rescue => e
+      print_debug("HKeyPerfDataReader: error occurred: objectname: #{perf_object&.name}, message: #{e.message}")
+      return nil, object_type&.totalByteLength, false
+    end
+
+    def set_couner_defs_to_object(perf_object, num_of_counters, counter_def_start_offset)
+      cur_offset = counter_def_start_offset
+
+      num_of_counters.times do
         counter_def = RawType::PerfCounterDefinition.new(:endian => endian)
           .read(@raw_data[cur_offset..]).snapshot
 
-        counter_name = @counter_name_reader.read(counter_def.counterNameTitleIndex)
-        counter_value = read_counter_value(
-          counter_def,
-          start_offset + object_type.definitionLength + counter_def.counterOffset,
+        perf_object.add_counter_def(
+          ConvertedType::PerfCounterDef.new(
+            @counter_name_reader.read(counter_def.counterNameTitleIndex),
+            counter_def,
+          )
         )
 
-        perf_object.add_counter(counter_name, counter_value)
         cur_offset += counter_def.byteLength
       end
 
-      return perf_object, object_type.totalByteLength
+      cur_offset
+    end
+
+    def set_counters_to_no_instance_object(perf_object, counter_block_offset)
+      # to unify data format, use no name instance for a container for the counters
+      instance = ConvertedType::PerfInstance.new("")
+
+      perf_object.counter_defs.each do |counter_def|
+        instance.add_counter(
+          counter_def.name,
+          read_counter_value(
+            counter_def,
+            counter_block_offset + counter_def.counter_offset, 
+          )
+        )
+      end
+
+      perf_object.add_instance(instance)
+    end
+
+    def set_counters_to_multiple_instance_object(
+      perf_object, num_of_instances, first_instance_offset
+    )
+      cur_instance_offset = first_instance_offset
+
+      num_of_instances.times do
+        instance_def = RawType::PerfInstanceDefinition.new(:endian => endian)
+          .read(@raw_data[cur_instance_offset..]).snapshot
+
+        unless instance_def.nameOffset == 0
+          name_offset = cur_instance_offset + instance_def.nameOffset
+          instance_name = @raw_data[
+            name_offset..name_offset+instance_def.nameLength-1
+          ].encode("UTF-8", "UTF-16LE").strip
+        else
+          # TODO there is a case like nameOffset is zero and no name data
+          # In this case, we may need to use parentObjectInstance or parentObjectTitleIndex.
+          instance_name = "Not found"
+        end
+
+        instance = ConvertedType::PerfInstance.new(instance_name)
+
+        counter_block_offset = cur_instance_offset + instance_def.byteLength
+
+        counter_block = RawType::PerfCounterBlock.new(:endian => endian)
+          .read(@raw_data[counter_block_offset..]).snapshot
+
+        perf_object.counter_defs.each do |counter_def|
+          instance.add_counter(
+            counter_def.name,
+            read_counter_value(
+              counter_def,
+              counter_block_offset + counter_def.counter_offset, 
+            )
+          )
+        end
+
+        perf_object.add_instance(instance)
+        cur_instance_offset = counter_block_offset + counter_block.byteLength
+      end
     end
 
     def read_counter_value(counter_def, offset)
@@ -138,7 +245,7 @@ module HKeyPerfDataReader
       #   ref: https://docs.microsoft.com/en-us/windows/win32/perfctrs/retrieving-counter-data
       # We don't need to consider `counterType` unless we need to format the value for output.
       endian_mark = @is_little_endian ? "<" : ">"
-      case counter_def.counterSize
+      case counter_def.counter_size
       when 4
         return @raw_data[offset..offset+3].unpack("L#{endian_mark}")[0]
       when 8
@@ -200,12 +307,12 @@ module HKeyPerfDataReader
       size = packdw(128*1024*1024) # 128kb (for now)
       data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
       ret = API::RegQueryValueExW.call(Constants::HKEY_PERFORMANCE_DATA, make_wstr("Global"), 0, type, data, size)
-      puts("RegQueryValueExW : ret=#{ret}") # for debug
+      puts("HKeyPerfDataReader: RegQueryValueExW : ret=#{ret}") # for debug
 
       # https://docs.microsoft.com/en-us/windows/win32/perfctrs/using-the-registry-functions-to-consume-counter-data
       # TODO The document above says we must call `RegCloseKey`, but this returns error code: 6 (ERROR_INVALID_HANDLE)
       ret = API::RegCloseKey.call(Constants::HKEY_PERFORMANCE_DATA)
-      puts("RegCloseKey : ret=#{ret}") # for debug
+      puts("HKeyPerfDataReader: RegCloseKey : ret=#{ret}") # for debug
 
       data
     end
@@ -216,7 +323,7 @@ module HKeyPerfDataReader
       size = packdw(128*1024*1024) # 128kb (for now)
       data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
       ret = API::RegQueryValueExW.call(Constants::HKEY_PERFORMANCE_DATA, make_wstr("Counter 009"), 0, type, data, size)
-      puts("RegQueryValueExW : ret=#{ret}") # for debug
+      puts("HKeyPerfDataReader: RegQueryValueExW : ret=#{ret}") # for debug
 
       data
     end
