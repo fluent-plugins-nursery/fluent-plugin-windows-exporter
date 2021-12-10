@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require "./hkey_perf_data_raw_type.rb"
+require_relative "hkey_perf_data_raw_type.rb"
 
 module HKeyPerfDataReader::ConvertedType
   class PerfDataBlock
@@ -43,18 +43,8 @@ module HKeyPerfDataReader::ConvertedType
       @counters = {}
     end
 
-    def add_counter(perf_counter)
-      @counters[perf_counter.name] = perf_counter
-    end
-  end
-
-  class PerfCounter
-    attr_reader :name
-    attr_accessor :value
-
-    def initialize(name)
-      @name = name
-      @value = nil
+    def add_counter(name, value)
+      @counters[name] = value
     end
   end
 end
