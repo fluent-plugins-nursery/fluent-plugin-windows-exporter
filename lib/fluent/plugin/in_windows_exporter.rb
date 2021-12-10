@@ -14,6 +14,7 @@
 # limitations under the License.
 
 require "fluent/plugin/input"
+require_relative "winffi"
 
 module Fluent
   module Plugin
@@ -49,7 +50,7 @@ module Fluent
         #@collectors << method(:collect_memory) if @memory
         #@collectors << method(:collect_net) if @net
         @collectors << method(:collect_time) if @time
-        #@collectors << method(:collect_os) if @os
+        @collectors << method(:collect_os) if @os
       end
 
       def start
@@ -66,8 +67,12 @@ module Fluent
         update_cache()
         es = Fluent::MultiEventStream.new
         for method in @collectors do
-            for record in method.call() do
-                es.add(now, record)
+            begin
+              for record in method.call() do
+                  es.add(now, record)
+              end
+            rescue => e
+              $log.warn(e.message)
             end
         end
         router.emit_stream(@tag, es)
@@ -86,6 +91,103 @@ module Fluent
             :timestamp => Fluent::EventTime.now.to_f,
             :value => Fluent::EventTime.now.to_f
         }]
+      end
+
+      def collect_os
+        mem = WinFFI.GetMemoryStatus()
+        work = WinFFI.GetWorkstationInfo()
+        perf = WinFFI.GetPerformanceInfo()
+        reg = WinFFI.GetRegistryInfo()
+
+        return [
+          {
+            :type => "gauge",
+            :name => "windows.os.info",
+            :desc => "Windows version info",
+            :labels => {
+              :product => "Microsoft #{reg[:ProductName]}",
+              :version => "#{work[:VersionMajor]}.#{work[:VersionMinor]}.#{reg[:CurrentBuildNumber]}"
+            },
+            :value => 1.0
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.timezone",
+            :desc => "OperatingSystem.LocalDateTime",
+            :labels => {:timezone => Time.now.zone},
+            :value => mem[:AvailPhys]
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.time",
+            :desc => "OperatingSystem.LocalDateTime",
+            :labels => {},
+            :value => Fluent::EventTime.now.to_f
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.paging_free_bytes",
+            :desc => "OperatingSystem.FreeSpaceInPagingFiles",
+            :labels => {},
+            :value => 0  # TODO: Implement using HKEY_PERFORMANCE_DATA
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.virtual_memory_bytes",
+            :desc => "OperatingSystem.TotalVirtualMemorySize",
+            :labels => {},
+            :value => mem[:AvailPageFile]
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.processes_limit",
+            :desc => "OperatingSystem.MaxNumberOfProcesses",
+            :labels => {},
+            :value => 4294967295.0
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.processes_limit",
+            :desc => "OperatingSystem.TotalVirtualMemorySize",
+            :labels => {},
+            :value => mem[:TotalVirtual]
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.processes",
+            :desc => "OperatingSystem.NumberOfProcesses",
+            :labels => {},
+            :value => perf[:ProcessCount]
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.users",
+            :desc => "OperatingSystem.NumberOfUsers",
+            :labels => {},
+            :value => work[:LoggedOnUsers]
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.paging_limit_bytes",
+            :desc => "OperatingSystem.SizeStoredInPagingFiles",
+            :labels => {},
+            :value => reg[:PagingLimitBytes]
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.virtual_memory_bytes",
+            :desc => "OperatingSystem.TotalVirtualMemorySize",
+            :labels => {},
+            :value => mem[:TotalPageFile],
+          },
+          {
+            :type => "gauge",
+            :name => "windows.os.visible_memory_bytes",
+            :desc => "OperatingSystem.TotalVisibleMemorySize",
+            :labels => {},
+            :value => mem[:TotalPhys]
+          }
+        ]
       end
     end
   end
