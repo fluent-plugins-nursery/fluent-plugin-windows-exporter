@@ -104,18 +104,17 @@ module Fluent
           {
             :type => "gauge",
             :name => "windows.os.info",
-            :desc => "Windows version info",
+            :desc => "OperatingSystem.Caption, OperatingSystem.Version",
             :labels => {
               :product => "Microsoft #{reg[:ProductName]}",
               :version => "#{work[:VersionMajor]}.#{work[:VersionMinor]}.#{reg[:CurrentBuildNumber]}"
             },
             :value => 1.0
           },
-          {
             :type => "gauge",
-            :name => "windows.os.timezone",
-            :desc => "OperatingSystem.LocalDateTime",
-            :labels => {:timezone => Time.now.zone},
+            :name => "windows.os.physical_memory_free_bytes",
+            :desc => "OperatingSystem.FreePhysicalMemory",
+            :labels => {},
             :value => mem[:AvailPhys]
           },
           {
@@ -127,6 +126,13 @@ module Fluent
           },
           {
             :type => "gauge",
+            :name => "windows.os.timezone",
+            :desc => "OperatingSystem.LocalDateTime",
+            :labels => {:timezone => Time.now.zone},
+            :value => 1.0
+          },
+          {
+            :type => "gauge",
             :name => "windows.os.paging_free_bytes",
             :desc => "OperatingSystem.FreeSpaceInPagingFiles",
             :labels => {},
@@ -134,8 +140,8 @@ module Fluent
           },
           {
             :type => "gauge",
-            :name => "windows.os.virtual_memory_bytes",
-            :desc => "OperatingSystem.TotalVirtualMemorySize",
+            :name => "windows.os.virtual_memory_free_bytes",
+            :desc => "OperatingSystem.FreeVirtualMemory",
             :labels => {},
             :value => mem[:AvailPageFile]
           },
@@ -144,12 +150,13 @@ module Fluent
             :name => "windows.os.processes_limit",
             :desc => "OperatingSystem.MaxNumberOfProcesses",
             :labels => {},
+            # prometheus-community/windows-exporter/collector/os.go#L275
             :value => 4294967295.0
           },
           {
             :type => "gauge",
-            :name => "windows.os.processes_limit",
-            :desc => "OperatingSystem.TotalVirtualMemorySize",
+            :name => "windows.os.process_memory_limit_bytes",
+            :desc => "OperatingSystem.MaxProcessMemorySize",
             :labels => {},
             :value => mem[:TotalVirtual]
           },
