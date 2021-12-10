@@ -29,6 +29,7 @@ module HKeyPerfDataReader
     def initialize
       @raw_data = nil
       @is_little_endian = true
+      @counter_name_reader = CounterNameTableReader.new
     end
 
     def read
@@ -50,7 +51,6 @@ module HKeyPerfDataReader
       offset = header.headerLength
       header.numObjectTypes.times do
         begin
-          # TODO get names of each object and counter
           perf_object, total_byte_length = read_perf_object(offset)
 
           # for deubg
@@ -94,7 +94,7 @@ module HKeyPerfDataReader
       cur_offset += object_type.headerLength
 
       perf_object = ConvertedType::PerfObject.new(
-        RawReader.read_name_table(object_type.objectNameTitleIndex)
+        @counter_name_reader.read(object_type.objectNameTitleIndex)
       )
 
       object_type.numCounters.times do
@@ -102,7 +102,7 @@ module HKeyPerfDataReader
           .read(@raw_data[cur_offset..]).snapshot
 
         counter = ConvertedType::PerfCounter.new(
-          RawReader.read_name_table(counter_def.counterNameTitleIndex)
+          @counter_name_reader.read(counter_def.counterNameTitleIndex)
         )
         counter.value = read_counter_value(
           counter_def,
@@ -129,6 +129,38 @@ module HKeyPerfDataReader
       else
         return @raw_data[offset..offset+3].unpack("L#{endian_mark}")
       end
+    end
+  end
+
+  class CounterNameTableReader
+    def initialize
+      @counter_name_table = CounterNameTableReader.build_table
+    end
+
+    def read(index)
+      @counter_name_table[index]
+    end
+
+    private
+
+    def self.build_table
+      # https://docs.microsoft.com/en-us/windows/win32/perfctrs/retrieving-counter-names-and-help-text
+      # https://github.com/leoluk/perflib_exporter
+
+      table = {}
+
+      raw_data = RawReader.read_counter_name_table
+      # TODO Does the endian need to be linked to the one of PerfDataBlock? Or is it OK to use only little endian?
+      converted_data = raw_data.encode("UTF-8", "UTF-16LE").split("\u0000")
+
+      loop do
+        index = converted_data.shift
+        value = converted_data.shift
+        break if index.nil? || value.nil?
+        table[index.to_i] = value
+      end
+
+      table
     end
   end
 
@@ -161,9 +193,15 @@ module HKeyPerfDataReader
       data
     end
 
-    def self.read_name_table(index)
-      # TODO implementation
-      index.to_s
+    def self.read_counter_name_table
+      # https://docs.microsoft.com/en-us/windows/win32/perfctrs/retrieving-counter-names-and-help-text
+      type = packdw(0)
+      size = packdw(128*1024*1024) # 128kb (for now)
+      data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
+      ret = API::RegQueryValueExW.call(Constants::HKEY_PERFORMANCE_DATA, make_wstr("Counter 009"), 0, type, data, size)
+      puts("RegQueryValueExW : ret=#{ret}") # for debug
+
+      data
     end
 
     private
