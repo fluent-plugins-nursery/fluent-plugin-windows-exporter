@@ -33,7 +33,7 @@ module HKeyPerfDataReader
 
     def read
       @raw_data = RawReader.read
-      @is_little_endian = @raw_data[8..11].unpack("I*")[0] == 1
+      @is_little_endian = @raw_data[8..11].unpack("L")[0] == 1
 
       puts("endian=#{endian}") # for debug
 
