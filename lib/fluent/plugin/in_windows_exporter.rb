@@ -15,6 +15,7 @@
 
 require "fluent/plugin/input"
 require_relative "winffi"
+require_relative "hkey_perf_data_reader"
 
 module Fluent
   module Plugin
@@ -43,11 +44,12 @@ module Fluent
       def configure(conf)
         super
         @cache = nil
+        @hkey_perf_data_reader = HKeyPerfDataReader::Reader.new
 
         @collectors = []
         #@collectors << method(:collect_cpu) if @cpu
         #@collectors << method(:collect_logical_disk) if @logical_disk
-        #@collectors << method(:collect_memory) if @memory
+        @collectors << method(:collect_memory) if @memory
         #@collectors << method(:collect_net) if @net
         @collectors << method(:collect_time) if @time
         @collectors << method(:collect_os) if @os
@@ -79,12 +81,22 @@ module Fluent
       end
 
       def update_cache
-        # Get system counters from HKEY_PERFORMANCE_DATA.
-        # Save them to @cache.
+        @cache = @hkey_perf_data_reader.read
+      end
+
+      def collect_memory
+        # Now just test HKeyPerfDataReader
+        return [{
+          :type => "gauge",
+          :name => "memory_test",
+          :desc =>  "Memory.Committed Bytes",
+          :labels => {},
+          :value => @cache["Memory"].counters["Committed Bytes"]
+        }]
       end
 
       def collect_time
-         return [{
+        return [{
             :type => "gauge",
             :name => "windows_time",
             :desc =>  "System time in seconds since epoch (1970)",
