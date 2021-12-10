@@ -17,6 +17,7 @@ require "bindata"
 
 module HKeyPerfDataReader
   module RawType
+    # https://docs.microsoft.com/en-us/windows/win32/api/winperf/ns-winperf-perf_data_block
     class PerfDataBlock < BinData::Record
       endian :big_and_little
       array :signature, :type => :uint16, :initial_length => 4
@@ -35,6 +36,7 @@ module HKeyPerfDataReader
       # uint32 :systemNameOffset
     end
 
+    # https://docs.microsoft.com/en-us/windows/win32/api/winperf/ns-winperf-perf_object_type
     class PerfObjectType < BinData::Record
       endian :big_and_little
       uint32 :totalByteLength
@@ -53,6 +55,7 @@ module HKeyPerfDataReader
       int64 :perfFreq
     end
 
+    # https://docs.microsoft.com/en-us/windows/win32/api/winperf/ns-winperf-perf_counter_definition
     class PerfCounterDefinition < BinData::Record
       endian :big_and_little
       uint32 :byteLength

@@ -40,11 +40,11 @@ module HKeyPerfDataReader::ConvertedType
 
     def initialize(name)
       @name = name
-      @counters = []
+      @counters = {}
     end
 
     def add_counter(perf_counter)
-      @counters.append(perf_counter)
+      @counters[perf_counter.name] = perf_counter
     end
   end
 
