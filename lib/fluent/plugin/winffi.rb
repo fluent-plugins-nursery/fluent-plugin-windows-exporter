@@ -2,11 +2,17 @@ require "fiddle/import"
 require "fiddle/types"
 require "win32/registry"
 
-# This module is a thin wrapper over Win32 API. Use this as follows:
+# A thin wrapper over Win32 API. You can use this as follows:
 #
-# >>> require_relative 'winffi'
-# >>> WinFFI.GetMemoryStatus
-# {:TotalPhys=>4294496256, :AvailPhys=>1923817472, ... }
+# Usage:
+#   require_relative 'winffi'
+#   WinFFI.GetMemoryStatus()  # => {:TotalPhys=>4294496256,  ... }
+#
+# Public API:
+#   * WinFFI.GetMemoryStatus()    ... Wraps GetMemoryStatusEx()
+#   * WinFFI.GetPerformanceInfo() ... Wraps GetPerformanceInfo()
+#   * WinFFI.GetWorkstationInfo() ... Wraps NetWkstaGetInfo()
+#   * WinFFI.GetRegistryInfo()    ... Return bits from registry
 
 module WinFFI
 
@@ -15,7 +21,7 @@ module WinFFI
     extend Fiddle::Importer
     dlload "Kernel32.dll"
     include Fiddle::Win32Types
-    extern "int GlobalMemoryStatusEx(void*)"
+    extern "BOOL GlobalMemoryStatusEx(void*)"
     MemoryStatusEx = struct([
       "DWORD dwLength",
       "DWORD dwMemoryLoad",
@@ -73,11 +79,14 @@ module WinFFI
     ])
   end
 
+  #--------------
+  # API functions
+  #--------------
   def self.GetMemoryStatus()
     buf = Kernel32::MemoryStatusEx.malloc
     buf.dwLength = Kernel32::MemoryStatusEx.size
-    if Kernel32.GlobalMemoryStatusEx(buf) == 0
-      return nil
+    if not Kernel32.GlobalMemoryStatusEx(buf)
+      raise "GetMemoryStatusEx() failed (err=#{Fiddle.win32_last_error})"
     end
 
     return {
@@ -91,33 +100,12 @@ module WinFFI
     }
   end
 
-  def self.GetWorkstationInfo
-    buf = "\0" * Fiddle::SIZEOF_VOIDP
-    if NetAPI32.NetWkstaGetInfo(nil, 102, buf) != 0
-        return nil
-    end
-    ptr = buf.unpack('j')[0]
-    if ptr == 0
-        return nil
-    end
-
-    info = NetAPI32::WKSTA_INFO_102.new(ptr)
-    ret = {
-      :PlatformID => info.wki102_platform_id,
-      :VersionMajor => info.wki102_ver_major,
-      :VersionMinor => info.wki102_ver_minor,
-      :LoggedOnUsers => info.wki102_logged_on_users
-    }
-    NetAPI32.NetApiBufferFree(ptr)
-    return ret
-  end
-
   def self.GetPerformanceInfo()
     buf = Psapi::PERFORMANCE_INFORMATION.malloc
     size = Psapi::PERFORMANCE_INFORMATION.size
     buf.cb = size
     if not Psapi.GetPerformanceInfo(buf, size)
-      return nil
+      raise "GetPerformanceInfo() failed (err=#{Fiddle.win32_last_error})"
     end
     return {
       :CommitTotal => buf.CommitTotal,
@@ -134,6 +122,28 @@ module WinFFI
       :ProcessCount => buf.ProcessCount,
       :ThreadCount => buf.ThreadCount
     }
+  end
+
+  def self.GetWorkstationInfo
+    buf = "\0" * Fiddle::SIZEOF_VOIDP
+    ret = NetAPI32.NetWkstaGetInfo(nil, 102, buf)
+    if ret != 0
+      raise "NetWkstaGetInfo() failed (ret=#{ret})"
+    end
+    ptr = buf.unpack('j')[0]
+    if ptr == 0
+      raise "NetWkstaGetInfo() returned a null pointer"
+    end
+
+    data = NetAPI32::WKSTA_INFO_102.new(ptr)
+    info = {
+      :PlatformID => data.wki102_platform_id,
+      :VersionMajor => data.wki102_ver_major,
+      :VersionMinor => data.wki102_ver_minor,
+      :LoggedOnUsers => data.wki102_logged_on_users
+    }
+    NetAPI32.NetApiBufferFree(ptr)
+    return info
   end
 
   def self.GetRegistryInfo()
