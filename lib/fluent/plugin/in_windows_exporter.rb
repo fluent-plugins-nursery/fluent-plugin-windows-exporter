@@ -86,8 +86,9 @@ module Fluent
       def collect_time
          return [{
             :type => "counter",
-            :labels => {},
+            :name => "windows.time",
             :desc =>  "System time in seconds since epoch (1970)",
+            :labels => {},
             :timestamp => Fluent::EventTime.now.to_f,
             :value => Fluent::EventTime.now.to_f
         }]
