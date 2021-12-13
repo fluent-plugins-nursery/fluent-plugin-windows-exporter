@@ -47,7 +47,7 @@ module Fluent
         @hkey_perf_data_reader = HKeyPerfDataReader::Reader.new
 
         @collectors = []
-        #@collectors << method(:collect_cpu) if @cpu
+        @collectors << method(:collect_cpu) if @cpu
         #@collectors << method(:collect_logical_disk) if @logical_disk
         @collectors << method(:collect_memory) if @memory
         #@collectors << method(:collect_net) if @net
@@ -83,6 +83,123 @@ module Fluent
 
       def update_cache
         @cache = @hkey_perf_data_reader.read
+      end
+
+      def collect_cpu
+        records = []
+        for core in @cache["Processor Information"].instances do
+            if core.name.downcase.include?("_total")
+                next
+            end
+            records += [
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_cstate_seconds_total",
+                    :desc => "Time spent in low-power idle state",
+                    :labels => {"core" => core.name, "state" => "c1" },
+                    :value => core.counters["% C1 Time"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_cstate_seconds_total",
+                    :desc => "Time spent in low-power idle state",
+                    :labels => {"core" => core.name, "state" => "c2" },
+                    :value => core.counters["% C2 Time"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_cstate_seconds_total",
+                    :desc => "Time spent in low-power idle state",
+                    :labels => {"core" => core.name, "state" => "c3" },
+                    :value => core.counters["% C3 Time"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_time_total",
+                    :desc => "Time that processor spent in different modes (idle, user, system, ...)",
+                    :labels => {"core" => core.name, "mode" => "idle"},
+                    :value => core.counters["% Idle Time"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_time_total",
+                    :desc => "Time that processor spent in different modes (idle, user, system, ...)",
+                    :labels => {"core" => core.name, "mode" => "interrupt"},
+                    :value => core.counters["% Interrupt Time"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_time_total",
+                    :desc => "Time that processor spent in different modes (idle, user, system, ...)",
+                    :labels => {"core" => core.name, "mode" => "dpc"},
+                    :value => core.counters["% DPC Time"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_time_total",
+                    :desc => "Time that processor spent in different modes (idle, user, system, ...)",
+                    :labels => {"core" => core.name, "mode" => "privileged"},
+                    :value => core.counters["% Privileged Time"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_time_total",
+                    :desc => "Time that processor spent in different modes (idle, user, system, ...)",
+                    :labels => {"core" => core.name, "mode" => "user"},
+                    :value => core.counters["% User Time"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_interrupts_total",
+                    :desc => "Total number of received and serviced hardware interrupts",
+                    :labels => {"core" => core.name},
+                    :value => core.counters["Interrupts/sec"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_dpcs_total",
+                    :desc => "Total number of received and serviced deferred procedure calls (DPCs)",
+                    :labels => {"core" => core.name},
+                    :value => core.counters["DPCs Queued/sec"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_clock_interrupts_total",
+                    :desc => "Total number of received and serviced clock tick interrupts",
+                    :labels => {"core" => core.name},
+                    :value => core.counters["Clock Interrupts/sec"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_idle_break_events_total",
+                    :desc => "Total number of time processor was woken from idle",
+                    :labels => {"core" => core.name},
+                    :value => core.counters["Idle Break Events/sec"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_parking_status",
+                    :desc => "Parking Status represents whether a processor is parked or not",
+                    :labels => {"core" => core.name},
+                    :value => core.counters["Parking Status"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_core_frequency_mhz",
+                    :desc => "Core frequency in megahertz",
+                    :labels => {"core" => core.name},
+                    :value => core.counters["Processor Frequency"]
+                },
+                {
+                    :type => "gauge",
+                    :name => "windows_cpu_processor_performance",
+                    :desc => "Processor Performance is the average performance of the processor while it is executing instructions, as a percentage of the nominal performance of the processor. On some processors, Processor Performance may exceed 100%",
+                    :labels => {"core" => core.name},
+                    :value => core.counters["% Processor Performance"]
+                }
+            ]
+        end
+        return records
       end
 
       def collect_memory
