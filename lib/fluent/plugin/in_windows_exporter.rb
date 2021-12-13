@@ -74,7 +74,8 @@ module Fluent
                   es.add(now, record)
               end
             rescue => e
-              $log.warn(e.message)
+              $log.error(e.message)
+              $log.error_backtrace
             end
         end
         router.emit_stream(@tag, es)
