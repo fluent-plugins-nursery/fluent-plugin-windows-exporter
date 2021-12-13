@@ -31,8 +31,7 @@ require_relative "hkey_perf_data_converted_type"
 #   data["Memory"].instances[0].counters
 #     => {"Page Faults/sec"=>1097060125, "Available Bytes"=>6256005120,  ...}
 #   data["Processor"].instance_names
-#     => ["0", "1", "2", "3", "_Total", "Not found", ...]
-#     Note. "Not found": This can not take some instance names correctly yet.
+#     => ["0", "1", "2", "3", ... , "_Total"]
 #   data["Processor"].instances[5].name
 #     => "_Total"
 #   data["Processor"].instances[5].counters
@@ -88,7 +87,7 @@ module HKeyPerfDataReader
           end
         end
 
-        print_debug_perf_object(perf_object)
+        # print_debug_perf_object(perf_object)
 
         # TODO some object names are nil. Exclude them temporarily.
         perf_objects[perf_object.name] = perf_object unless perf_object.name.nil?
@@ -150,7 +149,7 @@ module HKeyPerfDataReader
       else
         set_counters_to_multiple_instance_object(
           perf_object,
-          object_type.numCounters,
+          object_type.numInstances,
           object_start_offset + object_type.definitionLength,
         )
       end
@@ -207,16 +206,10 @@ module HKeyPerfDataReader
         instance_def = RawType::PerfInstanceDefinition.new(:endian => endian)
           .read(@raw_data[cur_instance_offset..]).snapshot
 
-        unless instance_def.nameOffset == 0
-          name_offset = cur_instance_offset + instance_def.nameOffset
-          instance_name = @raw_data[
-            name_offset..name_offset+instance_def.nameLength-1
-          ].encode("UTF-8", "UTF-16LE").strip
-        else
-          # TODO there is a case like nameOffset is zero and no name data
-          # In this case, we may need to use parentObjectInstance or parentObjectTitleIndex.
-          instance_name = "Not found"
-        end
+        name_offset = cur_instance_offset + instance_def.nameOffset
+        instance_name = @raw_data[
+          name_offset..name_offset+instance_def.nameLength-1
+        ].encode("UTF-8", "UTF-16LE").strip
 
         instance = ConvertedType::PerfInstance.new(instance_name)
 

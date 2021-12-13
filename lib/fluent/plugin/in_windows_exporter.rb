@@ -115,7 +115,7 @@ module Fluent
 
         pfusage = 0
         for ins in @cache["Paging File"].instances do
-          if ins.name.downcase != "not found" and not ins.name.downcase.include?("_total")
+          unless ins.name.downcase.include?("_total")
             pfusage += ins.counters["% Usage"]
           end
         end
