@@ -113,6 +113,13 @@ module Fluent
         perf = WinFFI.GetPerformanceInfo()
         reg = WinFFI.GetRegistryInfo()
 
+        pfusage = 0
+        for ins in @cache["Paging File"].instances do
+          if ins.name.downcase != "not found" and not ins.name.downcase.include?("_total")
+            pfusage += ins.counters["% Usage"]
+          end
+        end
+
         return [
           {
             :type => "gauge",
@@ -150,7 +157,7 @@ module Fluent
             :name => "windows_os_paging_free_bytes",
             :desc => "OperatingSystem.FreeSpaceInPagingFiles",
             :labels => {},
-            :value => 0  # TODO: Implement using HKEY_PERFORMANCE_DATA
+            :value =>  reg[:PagingLimitBytes] - pfusage * perf[:PageSize]
           },
           {
             :type => "gauge",
