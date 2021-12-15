@@ -19,7 +19,22 @@ require_relative "hkey_perf_data_reader"
 
 module Fluent
   module Plugin
+    module Constants
+      # https://github.com/prometheus-community/windows_exporter/blob/master/collector/collector.go
+      TICKS_TO_SECONDS_SCALE_FACTOR = 1 / 1e7
+      WINDOWS_EPOCH = 116444736000000000
+
+      # https://github.com/leoluk/perflib_exporter/blob/master/collector/mapper.go
+      # These flag values may be composed of the base flags in winperf.h.
+      # ref: https://github.com/Kochise/Picat-win32/blob/master/emu/windows/winperf.h
+      PERF_ELAPSED_TIME = 0x30240500
+      PERF_100NSEC_TIMER = 0x20510500
+      PERF_PRECISION_100NS_TIMER = 0x20570500
+    end
+
     class WindowsExporterInput < Fluent::Plugin::Input
+      include Constants
+
       Fluent::Plugin.register_input("windows_exporter", self)
 
       helpers :timer
@@ -203,7 +218,7 @@ module Fluent
       end
 
       def collect_logical_disk
-        ticks_to_seconds_scale_factor = HKeyPerfDataReader::Constants::TICKS_TO_SECONDS_SCALE_FACTOR
+        ticks_to_seconds_scale_factor = Constants::TICKS_TO_SECONDS_SCALE_FACTOR
 
         hpd = @cache_manager.hkey_perf_data_cache
         records = []
@@ -803,7 +818,26 @@ module Fluent
         # TODO calculation for this plugin
         # https://github.com/prometheus-community/windows_exporter/blob/master/collector/perflib.go#L83-L90
 
+        data.each do |object_name, object|
+          object.instances.each do |instance|
+            instance.counters.each do |counter_name, counter|
+              counter.value = calc_hpd_counter_value(object, counter.type, counter.value)
+            end
+          end
+        end
+
         data
+      end
+
+      def calc_hpd_counter_value(object, type, value)
+        case type
+        when Constants::PERF_ELAPSED_TIME
+          return (value - Constants::WINDOWS_EPOCH) / object.perf_freq
+        when Constants::PERF_100NSEC_TIMER, Constants::PERF_PRECISION_100NS_TIMER
+          return value * Constants::TICKS_TO_SECONDS_SCALE_FACTOR
+        else
+          return value
+        end
       end
     end
   end

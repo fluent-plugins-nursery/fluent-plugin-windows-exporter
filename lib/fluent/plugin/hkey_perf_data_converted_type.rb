@@ -38,11 +38,13 @@ module HKeyPerfDataReader::ConvertedType
     attr_reader :name
     attr_reader :instances
     attr_reader :counter_defs
+    attr_reader :perf_freq
 
-    def initialize(name)
+    def initialize(name, object_type)
       @name = name
       @instances = []
       @counter_defs = []
+      @perf_freq = object_type.perfFreq
     end
 
     def instance_names
@@ -93,13 +95,16 @@ module HKeyPerfDataReader::ConvertedType
 
   class PerfCounter
     attr_reader :name
+    attr_reader :type
     attr_accessor :value
     attr_accessor :base_value
 
-    def initialize(name)
+    def initialize(counter_def)
       # https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc785636(v=ws.10)
-      # https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.performancecountertype?view=dotnet-plat-ext-6.0#System_Diagnostics_PerformanceCounterType_RawFraction
-      @name = name
+      # https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.performancecountertype
+
+      @name = counter_def.name
+      @type = counter_def.counter_type
 
       # Raw value, which has not been calculated according to the counter type
       @value = 0
@@ -120,7 +125,7 @@ module HKeyPerfDataReader::ConvertedType
 
     def add_counter(counter_def, value)
       unless @counters.key?(counter_def.name)
-        @counters[counter_def.name] = PerfCounter.new(counter_def.name)
+        @counters[counter_def.name] = PerfCounter.new(counter_def)
       end
 
       if counter_def.is_base
