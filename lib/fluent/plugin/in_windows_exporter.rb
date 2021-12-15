@@ -43,7 +43,7 @@ module Fluent
 
       def configure(conf)
         super
-        @cache_manager = ChacheManager.new
+        @cache_manager = CacheManager.new
 
         @collectors = []
         @collectors << method(:collect_cpu) if @cpu
@@ -770,7 +770,7 @@ module Fluent
       end
     end
 
-    class ChacheManager
+    class CacheManager
       attr_reader :hkey_perf_data_cache
       attr_reader :memory_status_cache
       attr_reader :work_station_info_cache
