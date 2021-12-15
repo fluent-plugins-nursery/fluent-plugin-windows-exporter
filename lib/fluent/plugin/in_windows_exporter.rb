@@ -815,9 +815,6 @@ module Fluent
       def get_hkey_perf_data
         data = @hkey_perf_data_reader.read
 
-        # TODO calculation for this plugin
-        # https://github.com/prometheus-community/windows_exporter/blob/master/collector/perflib.go#L83-L90
-
         data.each do |object_name, object|
           object.instances.each do |instance|
             instance.counters.each do |counter_name, counter|
@@ -830,6 +827,8 @@ module Fluent
       end
 
       def calc_hpd_counter_value(object, type, value)
+        # https://github.com/prometheus-community/windows_exporter/blob/master/collector/perflib.go
+
         case type
         when Constants::PERF_ELAPSED_TIME
           return (value - Constants::WINDOWS_EPOCH) / object.perf_freq
