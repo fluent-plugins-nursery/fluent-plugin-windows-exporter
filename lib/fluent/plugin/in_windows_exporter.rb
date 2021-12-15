@@ -93,84 +93,84 @@ module Fluent
             end
             records += [
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_cstate_seconds_total",
                     :desc => "Time spent in low-power idle state",
                     :labels => {"core" => core.name, "state" => "c1" },
                     :value => core.counters["% C1 Time"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_cstate_seconds_total",
                     :desc => "Time spent in low-power idle state",
                     :labels => {"core" => core.name, "state" => "c2" },
                     :value => core.counters["% C2 Time"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_cstate_seconds_total",
                     :desc => "Time spent in low-power idle state",
                     :labels => {"core" => core.name, "state" => "c3" },
                     :value => core.counters["% C3 Time"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_time_total",
                     :desc => "Time that processor spent in different modes (idle, user, system, ...)",
                     :labels => {"core" => core.name, "mode" => "idle"},
                     :value => core.counters["% Idle Time"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_time_total",
                     :desc => "Time that processor spent in different modes (idle, user, system, ...)",
                     :labels => {"core" => core.name, "mode" => "interrupt"},
                     :value => core.counters["% Interrupt Time"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_time_total",
                     :desc => "Time that processor spent in different modes (idle, user, system, ...)",
                     :labels => {"core" => core.name, "mode" => "dpc"},
                     :value => core.counters["% DPC Time"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_time_total",
                     :desc => "Time that processor spent in different modes (idle, user, system, ...)",
                     :labels => {"core" => core.name, "mode" => "privileged"},
                     :value => core.counters["% Privileged Time"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_time_total",
                     :desc => "Time that processor spent in different modes (idle, user, system, ...)",
                     :labels => {"core" => core.name, "mode" => "user"},
                     :value => core.counters["% User Time"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_interrupts_total",
                     :desc => "Total number of received and serviced hardware interrupts",
                     :labels => {"core" => core.name},
                     :value => core.counters["Interrupts/sec"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_dpcs_total",
                     :desc => "Total number of received and serviced deferred procedure calls (DPCs)",
                     :labels => {"core" => core.name},
                     :value => core.counters["DPCs Queued/sec"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_clock_interrupts_total",
                     :desc => "Total number of received and serviced clock tick interrupts",
                     :labels => {"core" => core.name},
                     :value => core.counters["Clock Interrupts/sec"].value
                 },
                 {
-                    :type => "gauge",
+                    :type => "counter",
                     :name => "windows_cpu_idle_break_events_total",
                     :desc => "Total number of time processor was woken from idle",
                     :labels => {"core" => core.name},
