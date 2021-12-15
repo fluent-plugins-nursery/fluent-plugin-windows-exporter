@@ -321,7 +321,7 @@ module Fluent
             },
             {
               :type => "counter",
-              :name => "windows_loggical_disk_read_write_latency_seconds_total",
+              :name => "windows_logical_disk_read_write_latency_seconds_total",
               :desc => "Shows the time, in seconds, of the average disk transfer",
               :labels => {"volume" => volume.name},
               :value => volume.counters["Avg. Disk sec/Transfer"].value * ticks_to_seconds_scale_factor
