@@ -20,6 +20,8 @@ require_relative "hkey_perf_data_converted_type"
 # A reader for Windows registry key: HKeyPerfData.
 # This provides Windows performance counter data.
 #   ref: https://docs.microsoft.com/en-us/windows/win32/perfctrs/using-the-registry-functions-to-consume-counter-data
+# This provide the raw counter value, which has not been calculated according to the counter type.
+# ref: https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.performancecountertype
 # You can use this as follows:
 #
 # Usage:
@@ -28,14 +30,15 @@ require_relative "hkey_perf_data_converted_type"
 #   data = reader.read
 #   data.keys
 #     => ["RAS", "WSMan Quota Statistics", "Event Log", ...]
-#   data["Memory"].instances[0].counters
-#     => {"Page Faults/sec"=>1097060125, "Available Bytes"=>6256005120,  ...}
+#   data["Memory"].instances[0].counters.keys
+#     => ["Page Faults/sec", "Available Bytes",  ...]
+#   data["Memory"].instances[0].counters["Available Bytes"]
+#     => #<...PerfCounter... @name="Available Bytes", @value=2852536320, @base_value=0>
+#   data["Memory"].instances[0].counters["% Committed Bytes In Use"]
+#     => #<...PerfCounter... @name="% Committed Bytes In Use", @value=3583260914, @base_value=4294967295>
+#     Note: some counters have `base_value` in separate from `value` depending on the counter type.
 #   data["Processor"].instance_names
 #     => ["0", "1", "2", "3", ... , "_Total"]
-#   data["Processor"].instances[5].name
-#     => "_Total"
-#   data["Processor"].instances[5].counters
-#     => {"% Processor Time"=>1880217871093, "% User Time"=>41857187500, ...}
 #
 # Public API:
 #   * HKeyPerfDataReader::Reader#read()
@@ -192,7 +195,7 @@ module HKeyPerfDataReader
 
       perf_object.counter_defs.each do |counter_def|
         instance.add_counter(
-          counter_def.name,
+          counter_def,
           read_counter_value(
             counter_def,
             counter_block_offset + counter_def.counter_offset, 
@@ -226,7 +229,7 @@ module HKeyPerfDataReader
 
         perf_object.counter_defs.each do |counter_def|
           instance.add_counter(
-            counter_def.name,
+            counter_def,
             read_counter_value(
               counter_def,
               counter_block_offset + counter_def.counter_offset, 

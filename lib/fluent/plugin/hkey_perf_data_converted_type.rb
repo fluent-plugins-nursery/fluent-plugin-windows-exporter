@@ -62,11 +62,50 @@ module HKeyPerfDataReader::ConvertedType
     attr_reader :name
     attr_reader :counter_offset
     attr_reader :counter_size
+    attr_reader :counter_type
+
+    # https://github.com/Kochise/Picat-win32/blob/master/emu/windows/winperf.h
+    PERF_COUNTER_BASE = 0x30000
+    PERF_TIMER_100NS = 0x100000
 
     def initialize(name, raw_counter_def)
       @name = name
       @counter_offset = raw_counter_def.counterOffset
       @counter_size = raw_counter_def.counterSize
+      @counter_type = raw_counter_def.counterType
+    end
+
+    def is_base
+      # https://github.com/leoluk/perflib_exporter/blob/master/perflib/perflib.go
+      is_base_counter && !is_nano_second_counter
+    end
+
+    def is_base_counter
+      # https://github.com/leoluk/perflib_exporter/blob/master/perflib/perflib.go
+      (@counter_type & PERF_COUNTER_BASE) == PERF_COUNTER_BASE
+    end
+
+    def is_nano_second_counter
+      # https://github.com/leoluk/perflib_exporter/blob/master/perflib/perflib.go
+      (@counter_type & PERF_TIMER_100NS) == PERF_TIMER_100NS
+    end
+  end
+
+  class PerfCounter
+    attr_reader :name
+    attr_accessor :value
+    attr_accessor :base_value
+
+    def initialize(name)
+      # https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc785636(v=ws.10)
+      # https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.performancecountertype?view=dotnet-plat-ext-6.0#System_Diagnostics_PerformanceCounterType_RawFraction
+      @name = name
+
+      # Raw value, which has not been calculated according to the counter type
+      @value = 0
+
+      # For example, a value of counter type: `RawBase`
+      @base_value = 0
     end
   end
 
@@ -79,8 +118,16 @@ module HKeyPerfDataReader::ConvertedType
       @counters = {}
     end
 
-    def add_counter(name, value)
-      @counters[name] = value
+    def add_counter(counter_def, value)
+      unless @counters.key?(counter_def.name)
+        @counters[counter_def.name] = PerfCounter.new(counter_def.name)
+      end
+
+      if counter_def.is_base
+        @counters[counter_def.name].base_value = value
+      else
+        @counters[counter_def.name].value = value
+      end
     end
   end
 end
