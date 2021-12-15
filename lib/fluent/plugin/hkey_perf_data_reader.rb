@@ -44,6 +44,7 @@ require_relative "hkey_perf_data_converted_type"
 module HKeyPerfDataReader
   module Constants
     HKEY_PERFORMANCE_DATA = 0x80000004
+    HKEY_PERFORMANCE_TEXT = 0x80000050
     PERF_NO_INSTANCES = -1
   end
 
@@ -78,19 +79,18 @@ module HKeyPerfDataReader
         perf_object, total_byte_length, success = read_perf_object(offset)
         unless success
           if total_byte_length.nil?
-            print_debug("HKeyPerfDataReader: Can not continue. Stop reading.")
+            print_debug("Can not continue. Stop reading.")
             break
           else
-            print_debug("HKeyPerfDataReader: Skip this object and continue reading.")
+            print_debug("Skip this object and continue reading.")
             offset += total_byte_length
             next
           end
         end
 
         # print_debug_perf_object(perf_object)
-
-        # TODO some object names are nil. Exclude them temporarily.
-        perf_objects[perf_object.name] = perf_object unless perf_object.name.nil?
+        print_debug("Duplicate object name: #{perf_object.name}") if perf_objects.key?(perf_object.name)
+        perf_objects[perf_object.name] = perf_object
         offset += total_byte_length
       end
 
@@ -101,7 +101,7 @@ module HKeyPerfDataReader
 
     def print_debug(str)
       return unless @for_debug
-      puts str
+      puts "HKeyPerfDataReader: #{str}"
     end
 
     def print_debug_perf_object(perf_object)
@@ -131,11 +131,15 @@ module HKeyPerfDataReader
         .read(@raw_data[cur_offset..]).snapshot
       cur_offset += object_type.headerLength
 
-      perf_object = ConvertedType::PerfObject.new(
-        @counter_name_reader.read(object_type.objectNameTitleIndex)
-      )
+      name = @counter_name_reader.read(object_type.objectNameTitleIndex)
+      if name.to_s.empty?
+        print_debug("Can not get object name. Skip. ObjectNameTitleIndex: #{object_type.objectNameTitleIndex}")
+        return nil, object_type.totalByteLength, false if name.nil?
+      end
 
-      print_debug("object name: #{perf_object.name}")
+      perf_object = ConvertedType::PerfObject.new(name)
+
+      # print_debug(" object name: #{perf_object.name}")
 
       cur_offset = set_couner_defs_to_object(
         perf_object, object_type.numCounters, cur_offset
@@ -156,7 +160,7 @@ module HKeyPerfDataReader
 
       return perf_object, object_type.totalByteLength, true
     rescue => e
-      print_debug("HKeyPerfDataReader: error occurred: objectname: #{perf_object&.name}, message: #{e.message}")
+      print_debug("error occurred: objectname: #{perf_object&.name}, message: #{e.message}")
       return nil, object_type&.totalByteLength, false
     end
 
@@ -167,12 +171,14 @@ module HKeyPerfDataReader
         counter_def = RawType::PerfCounterDefinition.new(:endian => endian)
           .read(@raw_data[cur_offset..]).snapshot
 
-        perf_object.add_counter_def(
-          ConvertedType::PerfCounterDef.new(
-            @counter_name_reader.read(counter_def.counterNameTitleIndex),
-            counter_def,
+        name = @counter_name_reader.read(counter_def.counterNameTitleIndex)
+        unless name.to_s.empty?
+          perf_object.add_counter_def(
+            ConvertedType::PerfCounterDef.new(name, counter_def)
           )
-        )
+        else
+          print_debug("Can not get counter name. Skip. CounterNameTitleIndex: #{counter_def.counterNameTitleIndex}")
+        end
 
         cur_offset += counter_def.byteLength
       end
@@ -299,24 +305,51 @@ module HKeyPerfDataReader
       type = packdw(0)
       size = packdw(128*1024*1024) # 128kb (for now)
       data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
-      ret = API::RegQueryValueExW.call(Constants::HKEY_PERFORMANCE_DATA, make_wstr("Global"), 0, type, data, size)
-      puts("HKeyPerfDataReader: RegQueryValueExW : ret=#{ret}") # for debug
+      ret = API::RegQueryValueExW.call(
+        Constants::HKEY_PERFORMANCE_DATA, make_wstr("Global"), 0, type, data, size
+      )
+
+      if data.size < unpackdw(size)
+        # 128kb is large enough, so this doesn't normally happen.
+        raise RangeError, "Data size is too big: #{unpackdw(size)}"
+      end
+
+      # TODO handle error code of `ret`
 
       # https://docs.microsoft.com/en-us/windows/win32/perfctrs/using-the-registry-functions-to-consume-counter-data
       # TODO The document above says we must call `RegCloseKey`, but this returns error code: 6 (ERROR_INVALID_HANDLE)
       ret = API::RegCloseKey.call(Constants::HKEY_PERFORMANCE_DATA)
       puts("HKeyPerfDataReader: RegCloseKey : ret=#{ret}") # for debug
 
-      data
+      data[0..unpackdw(size)]
     end
 
     def self.read_counter_name_table
+      # This process can be replaced by:
+      #  require "win32/registry"
+      #  Win32::Registry::HKEY_PERFORMANCE_TEXT.read("Counter")
+      # TODO which is preferable?
+
+      # There is a problem with getting some name data in ruby.
+      # This is caused by `SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)` called from `rubygems\defaults\operating_system.rb`.
+      # https://github.com/fluent-plugins-nursery/fluent-plugin-windows-exporter/issues/1#issuecomment-994168635
+
       # https://docs.microsoft.com/en-us/windows/win32/perfctrs/retrieving-counter-names-and-help-text
-      type = packdw(0)
-      size = packdw(128*1024*1024) # 128kb (for now)
+      hkey = Constants::HKEY_PERFORMANCE_TEXT
+      source = make_wstr("Counter")
+      size = packdw(0)
+
+      ret = API::RegQueryValueExW.call(hkey, source, nil, nil, nil, size)
+
+      # TODO handle error code of `ret`
+
       data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
-      ret = API::RegQueryValueExW.call(Constants::HKEY_PERFORMANCE_DATA, make_wstr("Counter 009"), 0, type, data, size)
-      puts("HKeyPerfDataReader: RegQueryValueExW : ret=#{ret}") # for debug
+
+      ret = API::RegQueryValueExW.call(hkey, source, nil, nil, data, size)
+
+      # TODO handle error code of `ret`
+
+      # NOTE: no need to call `RegCloseKey` when just taking counter table data
 
       data
     end
