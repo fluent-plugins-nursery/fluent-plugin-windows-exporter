@@ -43,8 +43,7 @@ module Fluent
 
       def configure(conf)
         super
-        @cache = nil
-        @hkey_perf_data_reader = HKeyPerfDataReader::Reader.new
+        @cache_manager = ChacheManager.new
 
         @collectors = []
         @collectors << method(:collect_cpu) if @cpu
@@ -82,12 +81,13 @@ module Fluent
       end
 
       def update_cache
-        @cache = @hkey_perf_data_reader.read
+        @cache_manager.update
       end
 
       def collect_cpu
+        hpd = @cache_manager.hkey_perf_data_cache
         records = []
-        for core in @cache["Processor Information"].instances do
+        for core in hpd["Processor Information"].instances do
             if core.name.downcase.include?("_total")
                 next
             end
@@ -205,8 +205,9 @@ module Fluent
       def collect_logical_disk
         ticks_to_seconds_scale_factor = HKeyPerfDataReader::Constants::TICKS_TO_SECONDS_SCALE_FACTOR
 
+        hpd = @cache_manager.hkey_perf_data_cache
         records = []
-        for volume in @cache["LogicalDisk"].instances do
+        for volume in hpd["LogicalDisk"].instances do
           if volume.name.downcase.include?("_total")
             next
           end
@@ -316,237 +317,239 @@ module Fluent
       end
 
       def collect_memory
+        hpd = @cache_manager.hkey_perf_data_cache
         return [
           {
             :type => "gauge",
             :name => "windows_memory_available_bytes",
             :desc =>  "The amount of physical memory immediately available for allocation to a process or for system use. It is equal to the sum of memory assigned to the standby (cached), free and zero page lists (AvailableBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Available Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Available Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_cache_bytes",
             :desc =>  "(CacheBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Cache Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Cache Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_cache_bytes_peak",
             :desc =>  "(CacheBytesPeak)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Cache Bytes Peak"].value
+            :value => hpd["Memory"].instances[0].counters["Cache Bytes Peak"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_cache_faults_total",
             :desc =>  "(CacheFaultsPersec)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Cache Faults/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Cache Faults/sec"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_commit_limit",
             :desc =>  "(CommitLimit)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Commit Limit"].value
+            :value => hpd["Memory"].instances[0].counters["Commit Limit"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_committed_bytes",
             :desc =>  "(CommittedBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Committed Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Committed Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_demand_zero_faults_total",
             :desc =>  "The number of zeroed pages required to satisfy faults. Zeroed pages, pages emptied of previously stored data and filled with zeros, are a security feature of Windows that prevent processes from seeing data stored by earlier processes that used the memory space (DemandZeroFaults)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Demand Zero Faults/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Demand Zero Faults/sec"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_free_and_zero_page_list_bytes",
             :desc =>  "(FreeAndZeroPageListBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Free & Zero Page List Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Free & Zero Page List Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_free_system_page_table_entries",
             :desc =>  "(FreeSystemPageTableEntries)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Free System Page Table Entries"].value
+            :value => hpd["Memory"].instances[0].counters["Free System Page Table Entries"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_modified_page_list_bytes",
             :desc =>  "(ModifiedPageListBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Modified Page List Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Modified Page List Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_page_faults_total",
             :desc =>  "(PageFaultsPersec)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Page Faults/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Page Faults/sec"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_swap_page_reads_total",
             :desc =>  "Number of disk page reads (a single read operation reading several pages is still only counted once) (PageReadsPersec)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Page Reads/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Page Reads/sec"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_swap_pages_read_total",
             :desc =>  "Number of pages read across all page reads (ie counting all pages read even if they are read in a single operation) (PagesInputPersec)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Pages Input/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Pages Input/sec"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_swap_pages_written_total",
             :desc =>  "Number of pages written across all page writes (ie counting all pages written even if they are written in a single operation) (PagesOutputPersec)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Pages Output/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Pages Output/sec"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_swap_page_operations_total",
             :desc =>  "Total number of swap page read and writes (PagesPersec)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Pages/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Pages/sec"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_swap_page_writes_total",
             :desc =>  "Number of disk page writes (a single write operation writing several pages is still only counted once) (PageWritesPersec)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Page Writes/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Page Writes/sec"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_pool_nonpaged_allocs_total",
             :desc =>  "The number of calls to allocate space in the nonpaged pool. The nonpaged pool is an area of system memory area for objects that cannot be written to disk, and must remain in physical memory as long as they are allocated (PoolNonpagedAllocs)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Pool Nonpaged Allocs"].value
+            :value => hpd["Memory"].instances[0].counters["Pool Nonpaged Allocs"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_pool_nonpaged_bytes_total",
             :desc =>  "(PoolNonpagedBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Pool Nonpaged Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Pool Nonpaged Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_pool_paged_allocs_total",
             :desc =>  "(PoolPagedAllocs)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Pool Paged Allocs"].value
+            :value => hpd["Memory"].instances[0].counters["Pool Paged Allocs"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_pool_paged_bytes",
             :desc =>  "(PoolPagedBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Pool Paged Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Pool Paged Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_pool_paged_resident_bytes",
             :desc =>  "(PoolPagedResidentBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Pool Paged Resident Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Pool Paged Resident Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_standby_cache_core_bytes",
             :desc =>  "(StandbyCacheCoreBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Standby Cache Core Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Standby Cache Core Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_standby_cache_normal_priority_bytes",
             :desc =>  "(StandbyCacheNormalPriorityBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Standby Cache Normal Priority Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Standby Cache Normal Priority Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_standby_cache_reserve_bytes",
             :desc =>  "(StandbyCacheReserveBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Standby Cache Reserve Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["Standby Cache Reserve Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_system_cache_resident_bytes",
             :desc =>  "(SystemCacheResidentBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["System Cache Resident Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["System Cache Resident Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_system_code_resident_bytes",
             :desc =>  "(SystemCodeResidentBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["System Code Resident Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["System Code Resident Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_system_code_total_bytes",
             :desc =>  "(SystemCodeTotalBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["System Code Total Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["System Code Total Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_system_driver_resident_bytes",
             :desc =>  "(SystemDriverResidentBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["System Driver Resident Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["System Driver Resident Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_system_driver_total_bytes",
             :desc =>  "(SystemDriverTotalBytes)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["System Driver Total Bytes"].value
+            :value => hpd["Memory"].instances[0].counters["System Driver Total Bytes"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_transition_faults_total",
             :desc =>  "(TransitionFaultsPersec)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Transition Faults/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Transition Faults/sec"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_transition_pages_repurposed_total",
             :desc =>  "(TransitionPagesRePurposedPersec)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Transition Pages RePurposed/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Transition Pages RePurposed/sec"].value
           },
           {
             :type => "gauge",
             :name => "windows_memory_write_copies_total",
             :desc =>  "The number of page faults caused by attempting to write that were satisfied by copying the page from elsewhere in physical memory (WriteCopiesPersec)",
             :labels => {},
-            :value => @cache["Memory"].instances[0].counters["Write Copies/sec"].value
+            :value => hpd["Memory"].instances[0].counters["Write Copies/sec"].value
           }
         ]
       end
 
       def collect_net
+        hpd = @cache_manager.hkey_perf_data_cache
         records = []
-        for nic in @cache["Network Interface"].instances do
+        for nic in hpd["Network Interface"].instances do
             name = nic.name.gsub!(/[^a-zA-Z0-9]/, '_')
             if name == ""
               next
@@ -654,13 +657,14 @@ module Fluent
       end
 
       def collect_os
-        mem = WinFFI.GetMemoryStatus()
-        work = WinFFI.GetWorkstationInfo()
-        perf = WinFFI.GetPerformanceInfo()
-        reg = WinFFI.GetRegistryInfo()
+        hpd = @cache_manager.hkey_perf_data_cache
+        mem = @cache_manager.memory_status_cache
+        work = @cache_manager.work_station_info_cache
+        perf = @cache_manager.performance_info_cache
+        reg = @cache_manager.registry_info_cache
 
         pfusage = 0
-        for ins in @cache["Paging File"].instances do
+        for ins in hpd["Paging File"].instances do
           unless ins.name.downcase.include?("_total")
             pfusage += ins.counters["% Usage"].value
           end
@@ -763,6 +767,43 @@ module Fluent
             :value => mem[:TotalPhys]
           }
         ]
+      end
+    end
+
+    class ChacheManager
+      attr_reader :hkey_perf_data_cache
+      attr_reader :memory_status_cache
+      attr_reader :work_station_info_cache
+      attr_reader :performance_info_cache
+      attr_reader :registry_info_cache
+
+      def initialize
+        @hkey_perf_data_reader = HKeyPerfDataReader::Reader.new
+
+        @hkey_perf_data_cache = nil
+        @memory_status_cache = nil
+        @work_station_info_cache = nil
+        @performance_info_cache = nil
+        @registry_info_cache = nil
+      end
+
+      def update
+        @hkey_perf_data_cache = get_hkey_perf_data
+        @memory_status_cache = WinFFI.GetMemoryStatus()
+        @work_station_info_cache = WinFFI.GetWorkstationInfo()
+        @performance_info_cache = WinFFI.GetPerformanceInfo()
+        @registry_info_cache = WinFFI.GetRegistryInfo()
+      end
+
+      private
+
+      def get_hkey_perf_data
+        data = @hkey_perf_data_reader.read
+
+        # TODO calculation for this plugin
+        # https://github.com/prometheus-community/windows_exporter/blob/master/collector/perflib.go#L83-L90
+
+        data
       end
     end
   end
