@@ -50,7 +50,7 @@ module Fluent
         @collectors << method(:collect_cpu) if @cpu
         @collectors << method(:collect_logical_disk) if @logical_disk
         @collectors << method(:collect_memory) if @memory
-        #@collectors << method(:collect_net) if @net
+        @collectors << method(:collect_net) if @net
         @collectors << method(:collect_time) if @time
         @collectors << method(:collect_os) if @os
       end
@@ -542,6 +542,104 @@ module Fluent
             :value => @cache["Memory"].instances[0].counters["Write Copies/sec"].value
           }
         ]
+      end
+
+      def collect_net
+        records = []
+        for nic in @cache["Network Interface"].instances do
+            name = nic.name.gsub!(/[^a-zA-Z0-9]/, '_')
+            if name == ""
+              next
+            end
+
+            records += [
+              {
+                :type => "counter",
+                :name => "windows_net_bytes_received_total",
+                :desc =>  "(Network.BytesReceivedPerSec)",
+                :labels => {"nic": name},
+                :value => nic.counters["Bytes Received/sec"].value
+              },
+              {
+                :type => "counter",
+                :name => "windows_net_bytes_sent_total",
+                :desc =>  "(Network.BytesSentPerSec)",
+                :labels => {"nic": name},
+                :value => nic.counters["Bytes Sent/sec"].value
+              },
+              {
+                :type => "counter",
+                :name => "windows_net_bytes_total",
+                :desc =>  "(Network.BytesTotalPerSec)",
+                :labels => {"nic": name},
+                :value => nic.counters["Bytes Total/sec"].value
+              },
+              {
+                :type => "counter",
+                :name => "windows_net_packets_outbound_discarded_total",
+                :desc =>  "(Network.PacketsOutboundDiscarded)",
+                :labels => {"nic": name},
+                :value => nic.counters["Packets Outbound Discarded"].value
+              },
+              {
+                :type => "counter",
+                :name => "windows_net_packets_outbound_errors_total",
+                :desc =>  "(Network.PacketsOutboundErrors)",
+                :labels => {"nic": name},
+                :value => nic.counters["Packets Outbound Errors"].value
+              },
+              {
+                :type => "counter",
+                :name => "windows_net_packets_total",
+                :desc =>  "(Network.PacketsPerSec)",
+                :labels => {"nic": name},
+                :value => nic.counters["Packets/sec"].value
+              },
+              {
+                :type => "counter",
+                :name => "windows_net_packets_received_discarded_total",
+                :desc =>  "(Network.PacketsReceivedDiscarded)",
+                :labels => {"nic": name},
+                :value => nic.counters["Packets Received Discarded"].value
+              },
+              {
+                :type => "counter",
+                :name => "windows_net_packets_received_errors_total",
+                :desc =>  "(Network.PacketsReceivedErrors)",
+                :labels => {"nic": name},
+                :value => nic.counters["Packets Received Errors"].value
+              },
+              {
+                :type => "counter",
+                :name => "windows_net_packets_received_total",
+                :desc =>  "(Network.PacketsReceivedPerSec)",
+                :labels => {"nic": name},
+                :value => nic.counters["Packets Received/sec"].value
+              },
+              {
+                :type => "counter",
+                :name => "windows_net_packets_unknown_total",
+                :desc =>  "(Network.PacketsReceivedUnknown)",
+                :labels => {"nic": name},
+                :value => nic.counters["Packets Received Unknown"].value
+              },
+              {
+                :type => "counter",
+                :name => "windows_net_packets_sent_total",
+                :desc =>  "(Network.PacketsSentPerSec)",
+                :labels => {"nic": name},
+                :value => nic.counters["Packets Sent/sec"].value
+              },
+              {
+                :type => "gauge",
+                :name => "windows_net_current_bandwidth_bytes",
+                :desc =>  "(Network.CurrentBandwidth)",
+                :labels => {"nic": name},
+                :value => nic.counters["Current Bandwidth"].value
+              }
+            ]
+        end
+        return records
       end
 
       def collect_time
