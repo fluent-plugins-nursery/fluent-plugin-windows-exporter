@@ -49,6 +49,10 @@ module HKeyPerfDataReader
     HKEY_PERFORMANCE_DATA = 0x80000004
     HKEY_PERFORMANCE_TEXT = 0x80000050
     PERF_NO_INSTANCES = -1
+
+    # https://github.com/prometheus-community/windows_exporter/blob/master/collector/collector.go
+    TICKS_TO_SECONDS_SCALE_FACTOR = 1 / 1e7
+    WINDOWS_EPOCH = 116444736000000000
   end
 
   class Reader

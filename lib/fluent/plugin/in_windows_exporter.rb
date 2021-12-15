@@ -48,7 +48,7 @@ module Fluent
 
         @collectors = []
         @collectors << method(:collect_cpu) if @cpu
-        #@collectors << method(:collect_logical_disk) if @logical_disk
+        @collectors << method(:collect_logical_disk) if @logical_disk
         @collectors << method(:collect_memory) if @memory
         #@collectors << method(:collect_net) if @net
         @collectors << method(:collect_time) if @time
@@ -198,6 +198,119 @@ module Fluent
                     :value => core.counters["% Processor Performance"].value
                 }
             ]
+        end
+        return records
+      end
+
+      def collect_logical_disk
+        ticks_to_seconds_scale_factor = HKeyPerfDataReader::Constants::TICKS_TO_SECONDS_SCALE_FACTOR
+
+        records = []
+        for volume in @cache["LogicalDisk"].instances do
+          if volume.name.downcase.include?("_total")
+            next
+          end
+
+          records += [
+            {
+              :type => "gauge",
+              :name => "requests_queued",
+              :desc => "Number of requests outstanding on the disk at the time the performance data is collected",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["Current Disk Queue Length"].value
+            },
+            {
+              :type => "counter",
+              :name => "read_bytes_total",
+              :desc => "Rate at which bytes are transferred from the disk during read operations",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["Disk Read Bytes/sec"].value
+            },
+            {
+              :type => "counter",
+              :name => "reads_total",
+              :desc => "Rate of read operations on the disk",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["Disk Reads/sec"].value
+            },
+            {
+              :type => "counter",
+              :name => "write_bytes_total",
+              :desc => "Rate at which bytes are transferred to the disk during write operations",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["Disk Write Bytes/sec"].value
+            },
+            {
+              :type => "counter",
+              :name => "writes_total",
+              :desc => "Rate of write operations on the disk",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["Disk Writes/sec"].value
+            },
+            {
+              :type => "counter",
+              :name => "read_seconds_total",
+              :desc => "Seconds the disk was busy servicing read requests",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["% Disk Read Time"].value
+            },
+            {
+              :type => "counter",
+              :name => "write_seconds_total",
+              :desc => "Seconds the disk was busy servicing write requests",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["% Disk Write Time"].value
+            },
+            {
+              :type => "gauge",
+              :name => "free_bytes",
+              :desc => "Unused space of the disk in bytes (not real time, updates every 10-15 min)",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["Free Megabytes"].value * 1024 * 1024
+            },
+            {
+              :type => "gauge",
+              :name => "size_bytes",
+              :desc => "Total size of the disk in bytes (not real time, updates every 10-15 min)",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["% Free Space"].base_value * 1024 * 1024
+            },
+            {
+              :type => "counter",
+              :name => "idle_seconds_total",
+              :desc => "Seconds the disk was idle (not servicing read/write requests)",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["% Idle Time"].value
+            },
+            {
+              :type => "counter",
+              :name => "split_ios_total",
+              :desc => "Number of I/Os to the disk split into multiple I/Os",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["Split IO/Sec"].value
+            },
+            {
+              :type => "counter",
+              :name => "read_latency_seconds_total",
+              :desc => "Shows the average time, in seconds, of a read operation from the disk",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["Avg. Disk sec/Read"].value * ticks_to_seconds_scale_factor
+            },
+            {
+              :type => "counter",
+              :name => "write_latency_seconds_total",
+              :desc => "Shows the average time, in seconds, of a write operation to the disk",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["Avg. Disk sec/Write"].value * ticks_to_seconds_scale_factor
+            },
+            {
+              :type => "counter",
+              :name => "read_write_latency_seconds_total",
+              :desc => "Shows the time, in seconds, of the average disk transfer",
+              :labels => {"volumn" => volume.name},
+              :value => volume.counters["Avg. Disk sec/Transfer"].value * ticks_to_seconds_scale_factor
+            }
+          ]
         end
         return records
       end
