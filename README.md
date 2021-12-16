@@ -12,8 +12,8 @@ This plugin emits metrics as event stream, so can be used in combination with an
 
 ## Installation
 
-```bash
-$ gem install fluent-plugin-windows-exporter
+```sh
+% gem install fluent-plugin-windows-exporter
 ```
 
 ## Configuration
@@ -44,34 +44,6 @@ $ gem install fluent-plugin-windows-exporter
   logical_disk true    # optional
 </source>
 ```
-
-# Development
-
-## How to start development
-
- 1. Install Git for Windows
- 2. Install Ruby with devkit from https://rubyinstaller.org/
- 3. Clone this repository on Windows:
-    ```console
-    $ git clone https://github.com/fluent-plugins-nursery/fluent-plugin-windows-exporter/
-    ```
- 4. Run the following commands on RubyInstaller prompt:
-    ```console
-    $ cd fluent-plugin-windows-exporter
-    $ gem install bundler --version=2.1.4
-    $ bundle install
-    ```
- 5. Launch Fluentd:
-    ```console
-    $ type test.conf
-    <source>
-      @type windows_exporter
-    </source>
-    <match test.**>
-      @type stdout
-    </match>
-    $ bundle exec fluentd -c test.conf
-    ```
 
 ## Copyright
 
