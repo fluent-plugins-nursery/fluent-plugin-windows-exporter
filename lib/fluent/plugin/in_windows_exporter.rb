@@ -633,7 +633,7 @@ module Fluent
               },
               {
                 "type" => "counter",
-                "name" => "windows_net_packets_unknown_total",
+                "name" => "windows_net_packets_received_unknown_total",
                 "desc" =>  "(Network.PacketsReceivedUnknown)",
                 "labels" => {"nic": name},
                 "value" => nic.counters["Packets Received Unknown"].value
@@ -647,7 +647,7 @@ module Fluent
               },
               {
                 "type" => "gauge",
-                "name" => "windows_net_current_bandwidth_bytes",
+                "name" => "windows_net_current_bandwidth",
                 "desc" =>  "(Network.CurrentBandwidth)",
                 "labels" => {"nic": name},
                 "value" => nic.counters["Current Bandwidth"].value
