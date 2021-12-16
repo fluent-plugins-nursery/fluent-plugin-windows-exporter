@@ -1,100 +1,77 @@
 # fluent-plugin-windows-exporter
 
-[Fluentd](https://fluentd.org/) input plugin to do something.
+[Fluentd](https://fluentd.org/) plugin to collect Windows metrics.
+
+ | Platform | Support Version       |
+ | -------- | --------------------- |
+ | Fluentd  | Fluentd v1.x          |
+ | OS       | Windows Server 2008R2 or later |
+
+This is a Fluentd port of [Prometheus' Windows exporter](https://github.com/prometheus-community/windows_exporter).
+This plugin emits metrics as event stream, so can be used in combination with any output plugins.
+
+## Installation
+
+```bash
+$ gem install fluent-plugin-windows-exporter
+```
+
+## Configuration
+
+### List of Options
+
+| Option           | Description              | Default           |
+| ---------------- | ------------------------ | ----------------- |
+| `tag`            | Tag of the output events | `windows.metrics` |
+| `scrape_interval`| The interval time between data collection | `5` |
+| `cpu`            | Enable cpu collector     | `true` |
+| `logical_disk`   | Enable disk collector    | `true` |
+| `memory`         | Enable memory collector  | `true` |
+| `net`            | Enable network collector | `true` |
+| `os`             | Enable OS collector      | `true` |
+
+### Example Configuration
+
+```
+<source>
+  @type windows_exporter
+  tag windows.metrics  # optional
+  scrape_interval 60   # optional
+  cpu true             # optional
+  memory true          # optional
+  os trues             # optional
+  net true             # optional
+  logical_disk true    # optional
+</source>
+```
+
+# Development
 
 ## How to start development
 
  1. Install Git for Windows
  2. Install Ruby with devkit from https://rubyinstaller.org/
- 3. Clone this repository on Windows
+ 3. Clone this repository on Windows:
     ```console
     $ git clone https://github.com/fluent-plugins-nursery/fluent-plugin-windows-exporter/
     ```
- 4. Run the following
+ 4. Run the following commands on RubyInstaller prompt:
     ```console
     $ cd fluent-plugin-windows-exporter
     $ gem install bundler --version=2.1.4
     $ bundle install
     ```
- 5. Run Fluentd as follows:
+ 5. Launch Fluentd:
     ```console
     $ type test.conf
     <source>
       @type windows_exporter
-      tag test.log
-      scrape_interval 3
     </source>
     <match test.**>
       @type stdout
     </match>
     $ bundle exec fluentd -c test.conf
     ```
-
-## Installation
-
-### RubyGems
-
-```
-$ gem install fluent-plugin-windows-exporter
-```
-
-### Bundler
-
-Add following line to your Gemfile:
-
-```ruby
-gem "fluent-plugin-windows-exporter"
-```
-
-And then execute:
-
-```
-$ bundle
-```
-
-## Configuration
-
-### tag (string) (optional)
-
-Tag of the output events
-
-Default value: `windows.metrics`.
-
-### scrape_interval (time) (optional)
-
-The interval time between data collection
-
-Default value: `5`.
-
-### cpu (bool) (optional)
-
-Enable cpu collector
-
-Default value: `true`.
-
-### logical_disk (bool) (optional)
-
-Enable disk collector
-
-Default value: `true`.
-
-### memory (bool) (optional)
-
-Enable memory collector
-
-Default value: `true`.
-
-### net (bool) (optional)
-
-Enable network collector
-
-Default value: `true`.
-
-### os (bool) (optional)
-
-Enable OS collector
-
-Default value: `true`.
 
 ## Copyright
 
