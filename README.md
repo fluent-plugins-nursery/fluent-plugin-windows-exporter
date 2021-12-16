@@ -54,13 +54,47 @@ $ bundle
 
 ## Configuration
 
-You can generate configuration template:
+### tag (string) (optional)
 
-```
-$ fluent-plugin-config-format input windows-exporter
-```
+Tag of the output events
 
-You can copy and paste generated documents here.
+Default value: `windows.metrics`.
+
+### scrape_interval (time) (optional)
+
+The interval time between data collection
+
+Default value: `5`.
+
+### cpu (bool) (optional)
+
+Enable cpu collector
+
+Default value: `true`.
+
+### logical_disk (bool) (optional)
+
+Enable disk collector
+
+Default value: `true`.
+
+### memory (bool) (optional)
+
+Enable memory collector
+
+Default value: `true`.
+
+### net (bool) (optional)
+
+Enable network collector
+
+Default value: `true`.
+
+### os (bool) (optional)
+
+Enable OS collector
+
+Default value: `true`.
 
 ## Copyright
 
