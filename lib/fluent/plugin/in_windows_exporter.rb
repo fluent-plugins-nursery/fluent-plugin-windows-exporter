@@ -51,8 +51,6 @@ module Fluent
       config_param :memory, :bool, default: true
       desc "Enable network collector"
       config_param :net, :bool, default: true
-      desc "Enable time collector"
-      config_param :time, :bool, default: true
       desc "Enable OS collector"
       config_param :os, :bool, default: true
 
@@ -65,7 +63,6 @@ module Fluent
         @collectors << method(:collect_logical_disk) if @logical_disk
         @collectors << method(:collect_memory) if @memory
         @collectors << method(:collect_net) if @net
-        @collectors << method(:collect_time) if @time
         @collectors << method(:collect_os) if @os
       end
 
@@ -658,17 +655,6 @@ module Fluent
             ]
         end
         return records
-      end
-
-      def collect_time
-        return [{
-            :type => "gauge",
-            :name => "windows_time",
-            :desc =>  "System time in seconds since epoch (1970)",
-            :labels => {},
-            :timestamp => Fluent::EventTime.now.to_f,
-            :value => Fluent::EventTime.now.to_f
-        }]
       end
 
       def collect_os
