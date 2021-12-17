@@ -352,19 +352,23 @@ module HKeyPerfDataReader
       # https://github.com/fluent-plugins-nursery/fluent-plugin-windows-exporter/issues/1#issuecomment-994168635
 
       # https://docs.microsoft.com/en-us/windows/win32/perfctrs/retrieving-counter-names-and-help-text
-      hkey = Constants::HKEY_PERFORMANCE_TEXT
+      hkey = HKEY_PERFORMANCE_TEXT
       source = make_wstr("Counter")
       size = packdw(0)
 
       ret = API::RegQueryValueExW.call(hkey, source, nil, nil, nil, size)
 
-      # TODO handle error code of `ret`
+      unless ret == ERROR_SUCCESS
+        raise IOError, "RegQueryValueEx failed getting required buffer size. Error is #{ret}."
+      end
 
       data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
 
       ret = API::RegQueryValueExW.call(hkey, source, nil, nil, data, size)
 
-      # TODO handle error code of `ret`
+      unless ret == ERROR_SUCCESS
+        raise IOError, "RegQueryValueEx failed with #{ret}."
+      end
 
       # NOTE: no need to call `RegCloseKey` when just taking counter table data
 
