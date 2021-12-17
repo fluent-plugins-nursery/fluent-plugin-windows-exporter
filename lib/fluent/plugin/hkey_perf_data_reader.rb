@@ -49,6 +49,9 @@ module HKeyPerfDataReader
     HKEY_PERFORMANCE_DATA = 0x80000004
     HKEY_PERFORMANCE_TEXT = 0x80000050
     PERF_NO_INSTANCES = -1
+    # https://docs.microsoft.com/ja-jp/windows/win32/debug/system-error-codes
+    ERROR_SUCCESS = 0
+    ERROR_MORE_DATA = 234
   end
 
   class Reader
@@ -304,27 +307,38 @@ module HKeyPerfDataReader
   end
 
   module RawReader
+    include Constants
+    BUFFER_SIZE = 128*1024*1024 # 128kb
+
     def self.read
-      type = packdw(0)
-      size = packdw(128*1024*1024) # 128kb (for now)
-      data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
-      ret = API::RegQueryValueExW.call(
-        Constants::HKEY_PERFORMANCE_DATA, make_wstr("Global"), 0, type, data, size
-      )
-
-      if data.size < unpackdw(size)
-        # 128kb is large enough, so this doesn't normally happen.
-        raise RangeError, "Data size is too big: #{unpackdw(size)}"
-      end
-
-      # TODO handle error code of `ret`
-
       # https://docs.microsoft.com/en-us/windows/win32/perfctrs/using-the-registry-functions-to-consume-counter-data
-      # TODO The document above says we must call `RegCloseKey`, but this returns error code: 6 (ERROR_INVALID_HANDLE)
-      ret = API::RegCloseKey.call(Constants::HKEY_PERFORMANCE_DATA)
-      puts("HKeyPerfDataReader: RegCloseKey : ret=#{ret}") # for debug
+      # https://docs.microsoft.com/en-us/windows/win32/perfctrs/retrieving-counter-data
 
-      data[0..unpackdw(size)]
+      hkey = HKEY_PERFORMANCE_DATA
+      type = packdw(0)
+      source = make_wstr("Global")
+      size = packdw(BUFFER_SIZE)
+      data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
+
+      begin
+        ret = API::RegQueryValueExW.call(hkey, source, 0, type, data, size)
+
+        while ret == ERROR_MORE_DATA
+          size = packdw(unpackdw(size) + BUFFER_SIZE)
+          data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
+          ret = API::RegQueryValueExW.call(hkey, source, 0, type, data, size)
+        end
+
+        unless ret == ERROR_SUCCESS
+          raise IOError, "RegQueryValueEx failed with #{ret}."
+        end
+
+        return data[0..unpackdw(size)]
+      ensure
+        # https://docs.microsoft.com/en-us/windows/win32/perfctrs/using-the-registry-functions-to-consume-counter-data
+        # TODO The document above says we must call `RegCloseKey`, but this returns error code: 6 (ERROR_INVALID_HANDLE)
+        API::RegCloseKey.call(hkey)
+      end
     end
 
     def self.read_counter_name_table
