@@ -98,8 +98,14 @@ module Fluent
 
       def collect_cpu
         hpd = @cache_manager.hkey_perf_data_cache
+        counterset_name = "Processor Information"
+        unless hpd.key?(counterset_name)
+          $log.warn("Could not get HKeyPerfData CounterSet: #{counterset_name}")
+          return []
+        end
+
         records = []
-        for core in hpd["Processor Information"].instances do
+        for core in hpd[counterset_name].instances do
             if core.name.downcase.include?("_total")
                 next
             end
@@ -216,8 +222,14 @@ module Fluent
 
       def collect_logical_disk
         hpd = @cache_manager.hkey_perf_data_cache
+        counterset_name = "LogicalDisk"
+        unless hpd.key?(counterset_name)
+          $log.warn("Could not get HKeyPerfData CounterSet: #{counterset_name}")
+          return []
+        end
+
         records = []
-        for volume in hpd["LogicalDisk"].instances do
+        for volume in hpd[counterset_name].instances do
           if volume.name.downcase.include?("_total")
             next
           end
@@ -328,6 +340,12 @@ module Fluent
 
       def collect_memory
         hpd = @cache_manager.hkey_perf_data_cache
+        counterset_name = "Memory"
+        unless hpd.key?(counterset_name)
+          $log.warn("Could not get HKeyPerfData CounterSet: #{counterset_name}")
+          return []
+        end
+
         return [
           {
             "type" => "gauge",
@@ -558,8 +576,14 @@ module Fluent
 
       def collect_net
         hpd = @cache_manager.hkey_perf_data_cache
+        counterset_name = "Network Interface"
+        unless hpd.key?(counterset_name)
+          $log.warn("Could not get HKeyPerfData CounterSet: #{counterset_name}")
+          return []
+        end
+
         records = []
-        for nic in hpd["Network Interface"].instances do
+        for nic in hpd[counterset_name].instances do
             name = nic.name.gsub!(/[^a-zA-Z0-9]/, '_')
             if name == ""
               next
@@ -662,14 +686,7 @@ module Fluent
         perf = @cache_manager.performance_info_cache
         reg = @cache_manager.registry_info_cache
 
-        pfusage = 0
-        for ins in hpd["Paging File"].instances do
-          unless ins.name.downcase.include?("_total")
-            pfusage += ins.counters["% Usage"].value
-          end
-        end
-
-        return [
+        records = [
           {
             "type" => "gauge",
             "name" => "windows_os_info",
@@ -700,13 +717,6 @@ module Fluent
             "desc" => "OperatingSystem.LocalDateTime",
             "labels" => {:timezone => Time.now.zone},
             "value" => 1.0
-          },
-          {
-            "type" => "gauge",
-            "name" => "windows_os_paging_free_bytes",
-            "desc" => "OperatingSystem.FreeSpaceInPagingFiles",
-            "labels" => {},
-            "value" =>  reg[:PagingLimitBytes] - pfusage * perf[:PageSize]
           },
           {
             "type" => "gauge",
@@ -766,6 +776,31 @@ module Fluent
             "value" => mem[:TotalPhys]
           }
         ]
+
+        counterset_name = "Paging File"
+        unless hpd.key?(counterset_name)
+          $log.warn("Could not get HKeyPerfData CounterSet: #{counterset_name}")
+          return records
+        end
+
+        pfusage = 0
+        for ins in hpd[counterset_name].instances do
+          unless ins.name.downcase.include?("_total")
+            pfusage += ins.counters["% Usage"].value
+          end
+        end
+
+        records += [
+          {
+            "type" => "gauge",
+            "name" => "windows_os_paging_free_bytes",
+            "desc" => "OperatingSystem.FreeSpaceInPagingFiles",
+            "labels" => {},
+            "value" =>  reg[:PagingLimitBytes] - pfusage * perf[:PageSize]
+          }
+        ]
+
+        return records
       end
     end
 
