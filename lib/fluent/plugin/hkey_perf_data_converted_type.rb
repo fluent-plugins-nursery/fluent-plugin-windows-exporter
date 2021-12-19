@@ -114,6 +114,15 @@ module HKeyPerfDataReader::ConvertedType
     end
   end
 
+  class NullPerfCounter < PerfCounter
+    def initialize()
+      @name = nil
+      @type = 0
+      @value = 0
+      @base_value = 0
+    end
+  end
+
   class PerfInstance
     attr_reader :name
     attr_reader :counters
@@ -121,6 +130,7 @@ module HKeyPerfDataReader::ConvertedType
     def initialize(name)
       @name = name
       @counters = {}
+      @counters.default = NullPerfCounter.new()
     end
 
     def add_counter(counter_def, value)
