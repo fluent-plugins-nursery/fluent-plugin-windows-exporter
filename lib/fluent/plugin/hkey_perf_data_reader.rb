@@ -46,8 +46,8 @@ require_relative "hkey_perf_data_converted_type"
 
 module HKeyPerfDataReader
   module Constants
-    HKEY_PERFORMANCE_DATA = 0x80000004
-    HKEY_PERFORMANCE_TEXT = 0x80000050
+    HKEY_PERFORMANCE_DATA = 0xFFFFFFFF80000004
+    HKEY_PERFORMANCE_TEXT = 0xFFFFFFFF80000050
     PERF_NO_INSTANCES = -1
     # https://docs.microsoft.com/ja-jp/windows/win32/debug/system-error-codes
     ERROR_SUCCESS = 0
@@ -335,8 +335,6 @@ module HKeyPerfDataReader
 
         return data[0..unpackdw(size)]
       ensure
-        # https://docs.microsoft.com/en-us/windows/win32/perfctrs/using-the-registry-functions-to-consume-counter-data
-        # TODO The document above says we must call `RegCloseKey`, but this returns error code: 6 (ERROR_INVALID_HANDLE)
         API::RegCloseKey.call(hkey)
       end
     end
