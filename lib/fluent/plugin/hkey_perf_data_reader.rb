@@ -294,15 +294,13 @@ module HKeyPerfDataReader
   end
 
   module API
-    include Constants
     extend Fiddle::Importer
     dlload "advapi32.dll"
     [
       "long RegQueryValueExW(void *, void *, void *, void *, void *, void *)",
       "long RegCloseKey(void *)",
     ].each do |fn|
-      cfunc = extern fn, :stdcall
-      const_set cfunc.name.intern, cfunc
+      extern fn, :stdcall
     end
   end
 
@@ -321,12 +319,12 @@ module HKeyPerfDataReader
       data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
 
       begin
-        ret = API::RegQueryValueExW.call(hkey, source, 0, type, data, size)
+        ret = API.RegQueryValueExW(hkey, source, 0, type, data, size)
 
         while ret == ERROR_MORE_DATA
           size = packdw(unpackdw(size) + BUFFER_SIZE)
           data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
-          ret = API::RegQueryValueExW.call(hkey, source, 0, type, data, size)
+          ret = API.RegQueryValueExW(hkey, source, 0, type, data, size)
         end
 
         unless ret == ERROR_SUCCESS
@@ -335,7 +333,7 @@ module HKeyPerfDataReader
 
         return data[0..unpackdw(size)]
       ensure
-        API::RegCloseKey.call(hkey)
+        API.RegCloseKey(hkey)
       end
     end
 
@@ -354,7 +352,7 @@ module HKeyPerfDataReader
       source = make_wstr("Counter")
       size = packdw(0)
 
-      ret = API::RegQueryValueExW.call(hkey, source, nil, nil, nil, size)
+      ret = API.RegQueryValueExW(hkey, source, nil, nil, nil, size)
 
       unless ret == ERROR_SUCCESS
         raise IOError, "RegQueryValueEx failed getting required buffer size. Error is #{ret}."
@@ -362,7 +360,7 @@ module HKeyPerfDataReader
 
       data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
 
-      ret = API::RegQueryValueExW.call(hkey, source, nil, nil, data, size)
+      ret = API.RegQueryValueExW(hkey, source, nil, nil, data, size)
 
       unless ret == ERROR_SUCCESS
         raise IOError, "RegQueryValueEx failed with #{ret}."

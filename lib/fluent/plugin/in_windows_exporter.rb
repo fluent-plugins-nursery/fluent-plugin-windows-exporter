@@ -215,8 +215,6 @@ module Fluent
       end
 
       def collect_logical_disk
-        ticks_to_seconds_scale_factor = Constants::TICKS_TO_SECONDS_SCALE_FACTOR
-
         hpd = @cache_manager.hkey_perf_data_cache
         records = []
         for volume in hpd["LogicalDisk"].instances do
@@ -307,21 +305,21 @@ module Fluent
               "name" => "windows_logical_disk_read_latency_seconds_total",
               "desc" => "Shows the average time, in seconds, of a read operation from the disk",
               "labels" => {"volume" => volume.name},
-              "value" => volume.counters["Avg. Disk sec/Read"].value * ticks_to_seconds_scale_factor
+              "value" => volume.counters["Avg. Disk sec/Read"].value * TICKS_TO_SECONDS_SCALE_FACTOR
             },
             {
               "type" => "counter",
               "name" => "windows_logical_disk_write_latency_seconds_total",
               "desc" => "Shows the average time, in seconds, of a write operation to the disk",
               "labels" => {"volume" => volume.name},
-              "value" => volume.counters["Avg. Disk sec/Write"].value * ticks_to_seconds_scale_factor
+              "value" => volume.counters["Avg. Disk sec/Write"].value * TICKS_TO_SECONDS_SCALE_FACTOR
             },
             {
               "type" => "counter",
               "name" => "windows_logical_disk_read_write_latency_seconds_total",
               "desc" => "Shows the time, in seconds, of the average disk transfer",
               "labels" => {"volume" => volume.name},
-              "value" => volume.counters["Avg. Disk sec/Transfer"].value * ticks_to_seconds_scale_factor
+              "value" => volume.counters["Avg. Disk sec/Transfer"].value * TICKS_TO_SECONDS_SCALE_FACTOR
             }
           ]
         end
@@ -772,6 +770,8 @@ module Fluent
     end
 
     class CacheManager
+      include Constants
+
       attr_reader :hkey_perf_data_cache
       attr_reader :memory_status_cache
       attr_reader :work_station_info_cache
@@ -789,7 +789,7 @@ module Fluent
       end
 
       def update
-        @hkey_perf_data_cache = get_hkey_perf_data
+        @hkey_perf_data_cache = get_hkey_perf_data()
         @memory_status_cache = WinFFI.GetMemoryStatus()
         @work_station_info_cache = WinFFI.GetWorkstationInfo()
         @performance_info_cache = WinFFI.GetPerformanceInfo()
@@ -804,7 +804,9 @@ module Fluent
         data.each do |object_name, object|
           object.instances.each do |instance|
             instance.counters.each do |counter_name, counter|
-              counter.value = calc_hpd_counter_value(object, counter.type, counter.value)
+              counter.value = calc_hpd_counter_value(
+                object, counter.type, counter.value
+              )
             end
           end
         end
@@ -816,10 +818,10 @@ module Fluent
         # https://github.com/prometheus-community/windows_exporter/blob/master/collector/perflib.go
 
         case type
-        when Constants::PERF_ELAPSED_TIME
-          return (value - Constants::WINDOWS_EPOCH) / object.perf_freq
-        when Constants::PERF_100NSEC_TIMER, Constants::PERF_PRECISION_100NS_TIMER
-          return value * Constants::TICKS_TO_SECONDS_SCALE_FACTOR
+        when PERF_ELAPSED_TIME
+          return (value - WINDOWS_EPOCH) / object.perf_freq
+        when PERF_100NSEC_TIMER, PERF_PRECISION_100NS_TIMER
+          return value * TICKS_TO_SECONDS_SCALE_FACTOR
         else
           return value
         end

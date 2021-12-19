@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative "hkey_perf_data_raw_type.rb"
+require_relative "hkey_perf_data_raw_type"
 
 module HKeyPerfDataReader::ConvertedType
   class PerfDataBlock
