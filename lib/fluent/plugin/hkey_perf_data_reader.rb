@@ -57,25 +57,25 @@ module HKeyPerfDataReader
   class Reader
     include Constants
 
-    def initialize(for_debug = false)
+    def initialize(logger = nil)
       @raw_data = nil
       @is_little_endian = true
       @counter_name_reader = CounterNameTableReader.new
-      @for_debug = for_debug
+      @logger = logger.nil? ? NullLogger.new : logger
     end
 
     def read
-      @raw_data = RawReader.read
+      @raw_data = RawReader.read(@logger)
       @is_little_endian = @raw_data[8..11].unpack("L")[0] == 1
 
-      print_debug("endian=#{endian}")
+      @logger.debug("HKeyPerfData endian: #{endian}")
 
       header = read_header
-      print_debug("numObjectTypes=#{header.numObjectTypes}")
+      @logger.debug("HKeyPerfData numObjectTypes: #{header.numObjectTypes}")
 
       unless header.signature == "PERF"
-        puts("HKeyPerfDataReader: Invalid performance block header")
-        return nil
+        @logger.error("Could not read HKeyPerfData. The header is invalid.")
+        return {}
       end
 
       perf_objects = {}
@@ -85,40 +85,27 @@ module HKeyPerfDataReader
         perf_object, total_byte_length, success = read_perf_object(offset)
         unless success
           if total_byte_length.nil?
-            print_debug("Can not continue. Stop reading.")
+            @logger.trace("Can not continue. Stop reading.")
             break
           else
-            print_debug("Skip this object and continue reading.")
+            @logger.trace("Skip this object and continue reading.")
             offset += total_byte_length
             next
           end
         end
 
-        # print_debug_perf_object(perf_object)
-        print_debug("Duplicate object name: #{perf_object.name}") if perf_objects.key?(perf_object.name)
+        @logger.trace("Duplicate object name: #{perf_object.name}") if perf_objects.key?(perf_object.name)
         perf_objects[perf_object.name] = perf_object
         offset += total_byte_length
       end
 
       perf_objects
+    rescue => e
+      @logger.error("Could not read HKeyPerfData. Message: #{e.message}")
+      {}
     end
 
     private
-
-    def print_debug(str)
-      return unless @for_debug
-      puts "HKeyPerfDataReader: #{str}"
-    end
-
-    def print_debug_perf_object(perf_object)
-      print_debug("object name: #{perf_object.name}")
-      perf_object.instances.each do |instance|
-        print_debug("  instance: #{instance.name}")
-        print_debug("    counters: #{instance.counters}")
-        print_debug("")
-      end
-      print_debug("")
-    end
 
     def endian
       @is_little_endian ? :little : :big
@@ -139,13 +126,13 @@ module HKeyPerfDataReader
 
       name = @counter_name_reader.read(object_type.objectNameTitleIndex)
       if name.to_s.empty?
-        print_debug("Can not get object name. Skip. ObjectNameTitleIndex: #{object_type.objectNameTitleIndex}")
+        @logger.trace("Can not get object name. Skip. ObjectNameTitleIndex: #{object_type.objectNameTitleIndex}")
         return nil, object_type.totalByteLength, false if name.nil?
       end
 
       perf_object = ConvertedType::PerfObject.new(name, object_type)
 
-      # print_debug(" object name: #{perf_object.name}")
+      @logger.trace(" object name: #{perf_object.name}")
 
       cur_offset = set_couner_defs_to_object(
         perf_object, object_type.numCounters, cur_offset
@@ -166,7 +153,7 @@ module HKeyPerfDataReader
 
       return perf_object, object_type.totalByteLength, true
     rescue => e
-      print_debug("error occurred: objectname: #{perf_object&.name}, message: #{e.message}")
+      @logger.warn("error occurred: objectname: #{perf_object&.name}, message: #{e.message}")
       return nil, object_type&.totalByteLength, false
     end
 
@@ -183,7 +170,7 @@ module HKeyPerfDataReader
             ConvertedType::PerfCounterDef.new(name, counter_def)
           )
         else
-          print_debug("Can not get counter name. Skip. CounterNameTitleIndex: #{counter_def.counterNameTitleIndex}")
+          @logger.trace("Can not get counter name. Skip. CounterNameTitleIndex: #{counter_def.counterNameTitleIndex}")
         end
 
         cur_offset += counter_def.byteLength
@@ -259,6 +246,26 @@ module HKeyPerfDataReader
         return @raw_data[offset..offset+3].unpack("L#{endian_mark}")[0]
       end
     end
+
+    class NullLogger
+      def trace(*args, &block)
+      end
+
+      def debug(*args, &block)
+      end
+
+      def info(*args, &block)
+      end
+
+      def warn(*args, &block)
+      end
+
+      def error(*args, &block)
+      end
+
+      def fatal(*args, &block)
+      end
+    end
   end
 
   class CounterNameTableReader
@@ -308,7 +315,7 @@ module HKeyPerfDataReader
     include Constants
     BUFFER_SIZE = 128*1024*1024 # 128kb
 
-    def self.read
+    def self.read(logger = nil)
       # https://docs.microsoft.com/en-us/windows/win32/perfctrs/using-the-registry-functions-to-consume-counter-data
       # https://docs.microsoft.com/en-us/windows/win32/perfctrs/retrieving-counter-data
 
@@ -333,7 +340,10 @@ module HKeyPerfDataReader
 
         return data[0..unpackdw(size)]
       ensure
-        API.RegCloseKey(hkey)
+        ret = API.RegCloseKey(hkey)
+        unless ret == ERROR_SUCCESS
+          logger&.warn("RegCloseKey failed with #{ret}.")
+        end
       end
     end
 

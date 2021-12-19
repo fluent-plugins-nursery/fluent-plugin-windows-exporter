@@ -779,7 +779,7 @@ module Fluent
       attr_reader :registry_info_cache
 
       def initialize
-        @hkey_perf_data_reader = HKeyPerfDataReader::Reader.new
+        @hkey_perf_data_reader = HKeyPerfDataReader::Reader.new($log)
 
         @hkey_perf_data_cache = nil
         @memory_status_cache = nil
