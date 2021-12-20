@@ -42,7 +42,7 @@ module Fluent
       desc "Tag of the output events"
       config_param :tag, :string, default: "windows.metrics"
       desc "The interval time between data collection"
-      config_param :scrape_interval, :time, default: 5
+      config_param :scrape_interval, :time, default: 60
       desc "Enable cpu collector"
       config_param :cpu, :bool, default: true
       desc "Enable disk collector"

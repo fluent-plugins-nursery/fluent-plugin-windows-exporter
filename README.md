@@ -23,7 +23,7 @@ This plugin emits metrics as event stream, so can be used in combination with an
 | Option           | Description              | Default           |
 | ---------------- | ------------------------ | ----------------- |
 | `tag`            | Tag of the output events | `windows.metrics` |
-| `scrape_interval`| The interval time between data collection | `5` |
+| `scrape_interval`| The interval time between data collection | `60` |
 | `cpu`            | Enable cpu collector     | `true` |
 | `logical_disk`   | Enable disk collector    | `true` |
 | `memory`         | Enable memory collector  | `true` |
