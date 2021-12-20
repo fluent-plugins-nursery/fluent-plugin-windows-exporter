@@ -715,7 +715,7 @@ module Fluent
             "type" => "gauge",
             "name" => "windows_os_timezone",
             "desc" => "OperatingSystem.LocalDateTime",
-            "labels" => {:timezone => Time.now.zone},
+            "labels" => {:timezone => Time.now.strftime("%z")},
             "value" => 1.0
           },
           {
