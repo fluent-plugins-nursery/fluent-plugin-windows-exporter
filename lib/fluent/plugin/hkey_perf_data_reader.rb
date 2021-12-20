@@ -46,9 +46,8 @@ require_relative "hkey_perf_data_converted_type"
 
 module HKeyPerfDataReader
   module Constants
-    # TODO these 8-byte HKEY values may not work in a 32bit environment.
-    HKEY_PERFORMANCE_DATA = 0xFFFFFFFF80000004
-    HKEY_PERFORMANCE_TEXT = 0xFFFFFFFF80000050
+    HKEY_PERFORMANCE_DATA = 0x80000004
+    HKEY_PERFORMANCE_TEXT = 0x80000050
     PERF_NO_INSTANCES = -1
     # https://docs.microsoft.com/ja-jp/windows/win32/debug/system-error-codes
     ERROR_SUCCESS = 0
@@ -322,7 +321,7 @@ module HKeyPerfDataReader
       # https://docs.microsoft.com/en-us/windows/win32/perfctrs/using-the-registry-functions-to-consume-counter-data
       # https://docs.microsoft.com/en-us/windows/win32/perfctrs/retrieving-counter-data
 
-      hkey = HKEY_PERFORMANCE_DATA
+      hkey = convert_handle(HKEY_PERFORMANCE_DATA)
       type = packdw(0)
       source = make_wstr("Global")
       size = packdw(BUFFER_SIZE)
@@ -360,7 +359,7 @@ module HKeyPerfDataReader
       # https://github.com/fluent-plugins-nursery/fluent-plugin-windows-exporter/issues/1#issuecomment-994168635
 
       # https://docs.microsoft.com/en-us/windows/win32/perfctrs/retrieving-counter-names-and-help-text
-      hkey = HKEY_PERFORMANCE_TEXT
+      hkey = convert_handle(HKEY_PERFORMANCE_TEXT)
       source = make_wstr("Counter")
       size = packdw(0)
 
@@ -396,6 +395,19 @@ module HKeyPerfDataReader
 
     def self.make_wstr(str)
       str.encode(Encoding::UTF_16LE)
+    end
+
+    def self.win64?
+      /^(?:x64|x86_64)/ =~ RUBY_PLATFORM
+    end
+
+    def self.convert_handle(h)
+      # In winreg.h, HKEY values are ((HKEY)(ULONG_PTR)((LONG)0x8000...))
+      # So, in a 64bit environment, original 4-byte values are casted to 8-byte values for `LONG` cast.
+      # Since `LONG` is a signed type, the upper 4-bytes must be `FFFFFFFF`. (2's complement)
+      # NOTE: The implementation of `win32::Registry` uses `RegOpenKeyExW` to take proper HKEY values, but we can't use this way because we have to handle `HKEY_PERFORMANCE_DATA`, which can't be opened by `RegOpenKeyExW`.
+      return h unless win64?
+      0xFFFFFFFF00000000 | h
     end
   end
 end
