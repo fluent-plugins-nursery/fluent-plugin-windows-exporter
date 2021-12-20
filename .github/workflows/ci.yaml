@@ -1,0 +1,16 @@
+on: [push]
+name: Unit test
+jobs:
+  test:
+    runs-on: [ windows-latest ]
+    name: Test on Windows Server
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.7'
+      - name: Install dependencies
+        run: ridk exec bundle install
+      - name: Run tests
+        run: bundle exec rake test
