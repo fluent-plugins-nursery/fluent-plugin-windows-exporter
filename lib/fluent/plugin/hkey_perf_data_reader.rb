@@ -67,6 +67,8 @@ module HKeyPerfDataReader
 
     def read
       @raw_data = RawReader.read(@logger)
+      # `littleEndian` flag in PerfDataBlock: https://docs.microsoft.com/en-us/windows/win32/api/winperf/ns-winperf-perf_data_block
+      # Although we use this flag value, it will probably never be BigEndian, and we probably don't need to use this value.
       @is_little_endian = @raw_data[8..11].unpack("L")[0] == 1
 
       @logger.debug("HKeyPerfData endian: #{endian}")
