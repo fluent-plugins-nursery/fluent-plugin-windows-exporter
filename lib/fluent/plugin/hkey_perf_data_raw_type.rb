@@ -28,7 +28,8 @@ module HKeyPerfDataReader
       uint32 :headerLength
       uint32 :numObjectTypes
       int32 :defaultObject
-      # SYSTEMTIME :systemTime # TODO handle win32-SYSTEMTIME in ruby
+      # If the following values are needed, we have to handle win32-SYSTEMTIME in ruby.
+      # SYSTEMTIME :systemTime
       # int64 :perfTime
       # int64 :perfFreq
       # int64 :perfTime100nSec

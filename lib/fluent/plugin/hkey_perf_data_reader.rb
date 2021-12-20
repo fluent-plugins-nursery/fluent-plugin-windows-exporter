@@ -46,6 +46,7 @@ require_relative "hkey_perf_data_converted_type"
 
 module HKeyPerfDataReader
   module Constants
+    # TODO these 8-byte HKEY values may not work in a 32bit environment.
     HKEY_PERFORMANCE_DATA = 0xFFFFFFFF80000004
     HKEY_PERFORMANCE_TEXT = 0xFFFFFFFF80000050
     PERF_NO_INSTANCES = -1
@@ -286,7 +287,7 @@ module HKeyPerfDataReader
       table = {}
 
       raw_data = RawReader.read_counter_name_table
-      # TODO Does the endian need to be linked to the one of PerfDataBlock? Or is it OK to use only little endian?
+      # I'm not sure if this endian should be the same as PerfDataBlock's.
       converted_data = raw_data.encode("UTF-8", "UTF-16LE").split("\u0000")
 
       loop do
@@ -351,7 +352,6 @@ module HKeyPerfDataReader
       # This process can be replaced by:
       #  require "win32/registry"
       #  Win32::Registry::HKEY_PERFORMANCE_TEXT.read("Counter")
-      # TODO which is preferable?
 
       # There is a problem with getting some name data in ruby.
       # This is caused by `SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)` called from `rubygems\defaults\operating_system.rb`.
