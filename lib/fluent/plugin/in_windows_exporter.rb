@@ -80,14 +80,14 @@ module Fluent
         update_cache()
         es = Fluent::MultiEventStream.new
         for method in @collectors do
-            begin
-              for record in method.call() do
-                  es.add(now, record)
-              end
-            rescue => e
-              $log.error(e.message)
-              $log.error_backtrace
+          begin
+            for record in method.call() do
+              es.add(now, record)
             end
+          rescue => e
+            $log.error(e.message)
+            $log.error_backtrace
+          end
         end
         router.emit_stream(@tag, es)
       end
@@ -106,116 +106,116 @@ module Fluent
 
         records = []
         for core in hpd[counterset_name].instances do
-            if core.name.downcase.include?("_total")
-                next
-            end
-            records += [
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_cstate_seconds_total",
-                    "desc" => "Time spent in low-power idle state",
-                    "labels" => {"core" => core.name, "state" => "c1" },
-                    "value" => core.counters["% C1 Time"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_cstate_seconds_total",
-                    "desc" => "Time spent in low-power idle state",
-                    "labels" => {"core" => core.name, "state" => "c2" },
-                    "value" => core.counters["% C2 Time"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_cstate_seconds_total",
-                    "desc" => "Time spent in low-power idle state",
-                    "labels" => {"core" => core.name, "state" => "c3" },
-                    "value" => core.counters["% C3 Time"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_time_total",
-                    "desc" => "Time that processor spent in different modes (idle, user, system, ...)",
-                    "labels" => {"core" => core.name, "mode" => "idle"},
-                    "value" => core.counters["% Idle Time"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_time_total",
-                    "desc" => "Time that processor spent in different modes (idle, user, system, ...)",
-                    "labels" => {"core" => core.name, "mode" => "interrupt"},
-                    "value" => core.counters["% Interrupt Time"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_time_total",
-                    "desc" => "Time that processor spent in different modes (idle, user, system, ...)",
-                    "labels" => {"core" => core.name, "mode" => "dpc"},
-                    "value" => core.counters["% DPC Time"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_time_total",
-                    "desc" => "Time that processor spent in different modes (idle, user, system, ...)",
-                    "labels" => {"core" => core.name, "mode" => "privileged"},
-                    "value" => core.counters["% Privileged Time"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_time_total",
-                    "desc" => "Time that processor spent in different modes (idle, user, system, ...)",
-                    "labels" => {"core" => core.name, "mode" => "user"},
-                    "value" => core.counters["% User Time"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_interrupts_total",
-                    "desc" => "Total number of received and serviced hardware interrupts",
-                    "labels" => {"core" => core.name},
-                    "value" => core.counters["Interrupts/sec"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_dpcs_total",
-                    "desc" => "Total number of received and serviced deferred procedure calls (DPCs)",
-                    "labels" => {"core" => core.name},
-                    "value" => core.counters["DPCs Queued/sec"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_clock_interrupts_total",
-                    "desc" => "Total number of received and serviced clock tick interrupts",
-                    "labels" => {"core" => core.name},
-                    "value" => core.counters["Clock Interrupts/sec"].value
-                },
-                {
-                    "type" => "counter",
-                    "name" => "windows_cpu_idle_break_events_total",
-                    "desc" => "Total number of time processor was woken from idle",
-                    "labels" => {"core" => core.name},
-                    "value" => core.counters["Idle Break Events/sec"].value
-                },
-                {
-                    "type" => "gauge",
-                    "name" => "windows_cpu_parking_status",
-                    "desc" => "Parking Status represents whether a processor is parked or not",
-                    "labels" => {"core" => core.name},
-                    "value" => core.counters["Parking Status"].value
-                },
-                {
-                    "type" => "gauge",
-                    "name" => "windows_cpu_core_frequency_mhz",
-                    "desc" => "Core frequency in megahertz",
-                    "labels" => {"core" => core.name},
-                    "value" => core.counters["Processor Frequency"].value
-                },
-                {
-                    "type" => "gauge",
-                    "name" => "windows_cpu_processor_performance",
-                    "desc" => "Processor Performance is the average performance of the processor while it is executing instructions, as a percentage of the nominal performance of the processor. On some processors, Processor Performance may exceed 100%",
-                    "labels" => {"core" => core.name},
-                    "value" => core.counters["% Processor Performance"].value
-                }
-            ]
+          if core.name.downcase.include?("_total")
+            next
+          end
+          records += [
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_cstate_seconds_total",
+              "desc" => "Time spent in low-power idle state",
+              "labels" => {"core" => core.name, "state" => "c1" },
+              "value" => core.counters["% C1 Time"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_cstate_seconds_total",
+              "desc" => "Time spent in low-power idle state",
+              "labels" => {"core" => core.name, "state" => "c2" },
+              "value" => core.counters["% C2 Time"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_cstate_seconds_total",
+              "desc" => "Time spent in low-power idle state",
+              "labels" => {"core" => core.name, "state" => "c3" },
+              "value" => core.counters["% C3 Time"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_time_total",
+              "desc" => "Time that processor spent in different modes (idle, user, system, ...)",
+              "labels" => {"core" => core.name, "mode" => "idle"},
+              "value" => core.counters["% Idle Time"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_time_total",
+              "desc" => "Time that processor spent in different modes (idle, user, system, ...)",
+              "labels" => {"core" => core.name, "mode" => "interrupt"},
+              "value" => core.counters["% Interrupt Time"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_time_total",
+              "desc" => "Time that processor spent in different modes (idle, user, system, ...)",
+              "labels" => {"core" => core.name, "mode" => "dpc"},
+              "value" => core.counters["% DPC Time"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_time_total",
+              "desc" => "Time that processor spent in different modes (idle, user, system, ...)",
+              "labels" => {"core" => core.name, "mode" => "privileged"},
+              "value" => core.counters["% Privileged Time"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_time_total",
+              "desc" => "Time that processor spent in different modes (idle, user, system, ...)",
+              "labels" => {"core" => core.name, "mode" => "user"},
+              "value" => core.counters["% User Time"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_interrupts_total",
+              "desc" => "Total number of received and serviced hardware interrupts",
+              "labels" => {"core" => core.name},
+              "value" => core.counters["Interrupts/sec"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_dpcs_total",
+              "desc" => "Total number of received and serviced deferred procedure calls (DPCs)",
+              "labels" => {"core" => core.name},
+              "value" => core.counters["DPCs Queued/sec"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_clock_interrupts_total",
+              "desc" => "Total number of received and serviced clock tick interrupts",
+              "labels" => {"core" => core.name},
+              "value" => core.counters["Clock Interrupts/sec"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_cpu_idle_break_events_total",
+              "desc" => "Total number of time processor was woken from idle",
+              "labels" => {"core" => core.name},
+              "value" => core.counters["Idle Break Events/sec"].value
+            },
+            {
+              "type" => "gauge",
+              "name" => "windows_cpu_parking_status",
+              "desc" => "Parking Status represents whether a processor is parked or not",
+              "labels" => {"core" => core.name},
+              "value" => core.counters["Parking Status"].value
+            },
+            {
+              "type" => "gauge",
+              "name" => "windows_cpu_core_frequency_mhz",
+              "desc" => "Core frequency in megahertz",
+              "labels" => {"core" => core.name},
+              "value" => core.counters["Processor Frequency"].value
+            },
+            {
+              "type" => "gauge",
+              "name" => "windows_cpu_processor_performance",
+              "desc" => "Processor Performance is the average performance of the processor while it is executing instructions, as a percentage of the nominal performance of the processor. On some processors, Processor Performance may exceed 100%",
+              "labels" => {"core" => core.name},
+              "value" => core.counters["% Processor Performance"].value
+            }
+          ]
         end
         return records
       end
@@ -584,97 +584,97 @@ module Fluent
 
         records = []
         for nic in hpd[counterset_name].instances do
-            name = nic.name.gsub!(/[^a-zA-Z0-9]/, '_')
-            if name == ""
-              next
-            end
+          name = nic.name.gsub!(/[^a-zA-Z0-9]/, '_')
+          if name == ""
+            next
+          end
 
-            records += [
-              {
-                "type" => "counter",
-                "name" => "windows_net_bytes_received_total",
-                "desc" =>  "(Network.BytesReceivedPerSec)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Bytes Received/sec"].value
-              },
-              {
-                "type" => "counter",
-                "name" => "windows_net_bytes_sent_total",
-                "desc" =>  "(Network.BytesSentPerSec)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Bytes Sent/sec"].value
-              },
-              {
-                "type" => "counter",
-                "name" => "windows_net_bytes_total",
-                "desc" =>  "(Network.BytesTotalPerSec)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Bytes Total/sec"].value
-              },
-              {
-                "type" => "counter",
-                "name" => "windows_net_packets_outbound_discarded_total",
-                "desc" =>  "(Network.PacketsOutboundDiscarded)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Packets Outbound Discarded"].value
-              },
-              {
-                "type" => "counter",
-                "name" => "windows_net_packets_outbound_errors_total",
-                "desc" =>  "(Network.PacketsOutboundErrors)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Packets Outbound Errors"].value
-              },
-              {
-                "type" => "counter",
-                "name" => "windows_net_packets_total",
-                "desc" =>  "(Network.PacketsPerSec)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Packets/sec"].value
-              },
-              {
-                "type" => "counter",
-                "name" => "windows_net_packets_received_discarded_total",
-                "desc" =>  "(Network.PacketsReceivedDiscarded)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Packets Received Discarded"].value
-              },
-              {
-                "type" => "counter",
-                "name" => "windows_net_packets_received_errors_total",
-                "desc" =>  "(Network.PacketsReceivedErrors)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Packets Received Errors"].value
-              },
-              {
-                "type" => "counter",
-                "name" => "windows_net_packets_received_total",
-                "desc" =>  "(Network.PacketsReceivedPerSec)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Packets Received/sec"].value
-              },
-              {
-                "type" => "counter",
-                "name" => "windows_net_packets_received_unknown_total",
-                "desc" =>  "(Network.PacketsReceivedUnknown)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Packets Received Unknown"].value
-              },
-              {
-                "type" => "counter",
-                "name" => "windows_net_packets_sent_total",
-                "desc" =>  "(Network.PacketsSentPerSec)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Packets Sent/sec"].value
-              },
-              {
-                "type" => "gauge",
-                "name" => "windows_net_current_bandwidth",
-                "desc" =>  "(Network.CurrentBandwidth)",
-                "labels" => {"nic": name},
-                "value" => nic.counters["Current Bandwidth"].value
-              }
-            ]
+          records += [
+            {
+              "type" => "counter",
+              "name" => "windows_net_bytes_received_total",
+              "desc" =>  "(Network.BytesReceivedPerSec)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Bytes Received/sec"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_net_bytes_sent_total",
+              "desc" =>  "(Network.BytesSentPerSec)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Bytes Sent/sec"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_net_bytes_total",
+              "desc" =>  "(Network.BytesTotalPerSec)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Bytes Total/sec"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_net_packets_outbound_discarded_total",
+              "desc" =>  "(Network.PacketsOutboundDiscarded)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Packets Outbound Discarded"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_net_packets_outbound_errors_total",
+              "desc" =>  "(Network.PacketsOutboundErrors)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Packets Outbound Errors"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_net_packets_total",
+              "desc" =>  "(Network.PacketsPerSec)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Packets/sec"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_net_packets_received_discarded_total",
+              "desc" =>  "(Network.PacketsReceivedDiscarded)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Packets Received Discarded"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_net_packets_received_errors_total",
+              "desc" =>  "(Network.PacketsReceivedErrors)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Packets Received Errors"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_net_packets_received_total",
+              "desc" =>  "(Network.PacketsReceivedPerSec)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Packets Received/sec"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_net_packets_received_unknown_total",
+              "desc" =>  "(Network.PacketsReceivedUnknown)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Packets Received Unknown"].value
+            },
+            {
+              "type" => "counter",
+              "name" => "windows_net_packets_sent_total",
+              "desc" =>  "(Network.PacketsSentPerSec)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Packets Sent/sec"].value
+            },
+            {
+              "type" => "gauge",
+              "name" => "windows_net_current_bandwidth",
+              "desc" =>  "(Network.CurrentBandwidth)",
+              "labels" => {"nic": name},
+              "value" => nic.counters["Current Bandwidth"].value
+            }
+          ]
         end
         return records
       end
