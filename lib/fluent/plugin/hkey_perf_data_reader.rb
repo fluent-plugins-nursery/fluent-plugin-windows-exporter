@@ -341,6 +341,8 @@ module HKeyPerfDataReader
       type = packdw(0)
       source = make_wstr("Global")
       size = packdw(BUFFER_SIZE)
+
+      # NOTE: By Stoping allocating every time and starting reusing, we might be able to speed up the process.
       data = "\0".force_encoding("ASCII-8BIT") * unpackdw(size)
 
       begin
