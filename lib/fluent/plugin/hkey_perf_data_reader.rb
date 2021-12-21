@@ -77,12 +77,12 @@ module HKeyPerfDataReader
       # Although we use this flag value, it will probably never be BigEndian, and we probably don't need to use this value.
       @is_little_endian = @raw_data[8..11].unpack("L")[0] == 1
       if @binary_parser.nil?
-        @logger.debug("HKeyPerfData LittlEndian: #{@is_little_endian}")
+        @logger.trace("HKeyPerfData LittlEndian: #{@is_little_endian}")
         @binary_parser = BinaryParser.new(is_little_endian: @is_little_endian)
       end
 
       header = read_header
-      @logger.debug("HKeyPerfData numObjectTypes: #{header.numObjectTypes}")
+      @logger.trace("HKeyPerfData numObjectTypes: #{header.numObjectTypes}")
 
       unless header.signature == "PERF"
         @logger.error("Could not read HKeyPerfData. The header is invalid.")

@@ -69,6 +69,7 @@ module Fluent
       def start
         super
         timer_execute(:in_windows_exporter, @scrape_interval, &method(:on_timer))
+        $log.info("Start in_windows_exporter (%i collectors, every %is)" % [@collectors.count, @scrape_interval])
       end
 
       def shutdown
@@ -78,6 +79,8 @@ module Fluent
       def on_timer
         now = Fluent::EventTime.now
         update_cache()
+        $log.debug("Updated Windows counters (%.2fs)" % (Fluent::EventTime.now.to_f - now.to_f))
+
         es = Fluent::MultiEventStream.new
         for method in @collectors do
           begin
