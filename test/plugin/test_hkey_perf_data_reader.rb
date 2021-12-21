@@ -42,8 +42,12 @@ class HKeyPerfDataReaderTest < Test::Unit::TestCase
       object_name_whitelist: white_list
     )
 
+    # The first reading process include some initialization processes,
+    # so exclude from the measurement.
+    reader.read
+
     times_to_read = []
-    3.times do
+    10.times do
       result = Benchmark.realtime do
         reader.read
       end
