@@ -68,6 +68,8 @@ This is equivalent to the following exposition of Prometheus's Windows exporter:
 windows_memory_system_code_resident_bytes 8192
 ```
 
+For further details, please refer to [Prometheus' exposition format specification](https://github.com/prometheus/docs/blob/main/content/docs/instrumenting/exposition_formats.md).
+
 ## Copyright
 
 * Copyright(c) 2021- Fujimoto Seiji, Fukuda Daijiro
