@@ -41,6 +41,11 @@ require_relative "hkey_perf_data_converted_type"
 #     => ["0", "1", "2", "3", ... , "_Total"]
 #
 # Public API:
+#   * HKeyPerfDataReader::Reader#new(object_name_whitelist: [], logger: nil)
+#     * object_name_whitelist
+#       * you can use this in order to speed up the `read` process.
+#       * if this is an empty list, then this reader trys to read all data.
+#
 #   * HKeyPerfDataReader::Reader#read()
 #      return hash of PerfObject
 
@@ -57,11 +62,12 @@ module HKeyPerfDataReader
   class Reader
     include Constants
 
-    def initialize(logger = nil)
+    def initialize(object_name_whitelist: [], logger: nil)
       @raw_data = nil
       @is_little_endian = true
       @binary_parser = nil
       @counter_name_reader = CounterNameTableReader.new
+      @object_name_whitelist = Set.new(object_name_whitelist)
       @logger = logger.nil? ? NullLogger.new : logger
     end
 
@@ -126,12 +132,19 @@ module HKeyPerfDataReader
       name = @counter_name_reader.read(object_type.objectNameTitleIndex)
       if name.to_s.empty?
         @logger.trace("Can not get object name. Skip. ObjectNameTitleIndex: #{object_type.objectNameTitleIndex}")
-        return nil, object_type.totalByteLength, false if name.nil?
+        return nil, object_type.totalByteLength, false
       end
 
       perf_object = ConvertedType::PerfObject.new(name, object_type)
 
-      @logger.trace(" object name: #{perf_object.name}")
+      @logger.trace("object name: #{perf_object.name}")
+
+      unless @object_name_whitelist.empty?
+        unless @object_name_whitelist.include?(perf_object.name)
+          @logger.trace("Object name #{perf_object.name} is not in the whitelist. Skip. ")
+          return nil, object_type.totalByteLength, false
+        end
+      end
 
       cur_offset = set_couner_defs_to_object(
         perf_object, object_type.numCounters, cur_offset

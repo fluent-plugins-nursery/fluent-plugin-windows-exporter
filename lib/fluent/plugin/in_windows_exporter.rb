@@ -804,6 +804,16 @@ module Fluent
       end
     end
 
+    module HKeyPerfDataWhiteList
+      NAMES = [
+        "Processor Information",
+        "LogicalDisk",
+        "Memory",
+        "Network Interface",
+        "Paging File",
+      ]
+    end
+
     class CacheManager
       include Constants
 
@@ -814,7 +824,10 @@ module Fluent
       attr_reader :registry_info_cache
 
       def initialize
-        @hkey_perf_data_reader = HKeyPerfDataReader::Reader.new($log)
+        @hkey_perf_data_reader = HKeyPerfDataReader::Reader.new(
+          object_name_whitelist: HKeyPerfDataWhiteList::NAMES,
+          logger: $log
+        )
 
         @hkey_perf_data_cache = nil
         @memory_status_cache = nil
