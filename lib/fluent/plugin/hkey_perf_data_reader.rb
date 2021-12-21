@@ -283,10 +283,15 @@ module HKeyPerfDataReader
 
   class CounterNameTableReader
     def initialize
-      @counter_name_table = CounterNameTableReader.build_table
+      @counter_name_table = nil
     end
 
     def read(index)
+      # In order to reduce the process in the initialization phase.
+      if @counter_name_table.nil?
+        @counter_name_table = CounterNameTableReader.build_table
+      end
+
       @counter_name_table[index]
     end
 
