@@ -45,6 +45,29 @@ This plugin emits metrics as event stream, so can be used in combination with an
 </source>
 ```
 
+### Output format
+
+This plugin is desinged to export the equivalent amount of information with Prometheus.
+Here is what a typical event looks like:
+
+```ruby
+{
+    "type": "gauge",
+    "name": "windows_memory_system_code_resident_bytes",
+    "desc": "(SystemCodeResidentBytes)",
+    "labels": {},
+    "value": 8192
+}
+```
+
+This is equivalent to the following exposition of Prometheus's Windows exporter:
+
+```
+# HELP windows_memory_system_code_resident_bytes (SystemCodeResidentBytes)
+# TYPE windows_memory_system_code_resident_bytes gauge
+windows_memory_system_code_resident_bytes 8192
+```
+
 ## Copyright
 
 * Copyright(c) 2021- Fujimoto Seiji, Fukuda Daijiro
