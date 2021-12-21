@@ -60,6 +60,7 @@ module HKeyPerfDataReader
     def initialize(logger = nil)
       @raw_data = nil
       @is_little_endian = true
+      @binary_parser = nil
       @counter_name_reader = CounterNameTableReader.new
       @logger = logger.nil? ? NullLogger.new : logger
     end
@@ -69,8 +70,10 @@ module HKeyPerfDataReader
       # `littleEndian` flag in PerfDataBlock: https://docs.microsoft.com/en-us/windows/win32/api/winperf/ns-winperf-perf_data_block
       # Although we use this flag value, it will probably never be BigEndian, and we probably don't need to use this value.
       @is_little_endian = @raw_data[8..11].unpack("L")[0] == 1
-
-      @logger.debug("HKeyPerfData endian: #{endian}")
+      if @binary_parser.nil?
+        @logger.debug("HKeyPerfData LittlEndian: #{@is_little_endian}")
+        @binary_parser = BinaryParser.new(is_little_endian: @is_little_endian)
+      end
 
       header = read_header
       @logger.debug("HKeyPerfData numObjectTypes: #{header.numObjectTypes}")
@@ -109,21 +112,15 @@ module HKeyPerfDataReader
 
     private
 
-    def endian
-      @is_little_endian ? :little : :big
-    end
-
     def read_header
-      raw_perf_data_block = RawType::PerfDataBlock.new(:endian => endian)
-        .read(@raw_data).snapshot
+      raw_perf_data_block = @binary_parser.parse_data_block(@raw_data)
       ConvertedType::PerfDataBlock.new(raw_perf_data_block)
     end
 
     def read_perf_object(object_start_offset)
       cur_offset = object_start_offset
 
-      object_type = RawType::PerfObjectType.new(:endian => endian)
-        .read(@raw_data[cur_offset..]).snapshot
+      object_type = @binary_parser.parse_object_type(@raw_data[cur_offset..])
       cur_offset += object_type.headerLength
 
       name = @counter_name_reader.read(object_type.objectNameTitleIndex)
@@ -163,8 +160,7 @@ module HKeyPerfDataReader
       cur_offset = counter_def_start_offset
 
       num_of_counters.times do
-        counter_def = RawType::PerfCounterDefinition.new(:endian => endian)
-          .read(@raw_data[cur_offset..]).snapshot
+        counter_def = @binary_parser.parse_counter_definition(@raw_data[cur_offset..])
 
         name = @counter_name_reader.read(counter_def.counterNameTitleIndex)
         unless name.to_s.empty?
@@ -204,8 +200,9 @@ module HKeyPerfDataReader
       cur_instance_offset = first_instance_offset
 
       num_of_instances.times do
-        instance_def = RawType::PerfInstanceDefinition.new(:endian => endian)
-          .read(@raw_data[cur_instance_offset..]).snapshot
+        instance_def = @binary_parser.parse_instance_definition(
+          @raw_data[cur_instance_offset..]
+        )
 
         name_offset = cur_instance_offset + instance_def.nameOffset
         instance_name = @raw_data[
@@ -216,8 +213,9 @@ module HKeyPerfDataReader
 
         counter_block_offset = cur_instance_offset + instance_def.byteLength
 
-        counter_block = RawType::PerfCounterBlock.new(:endian => endian)
-          .read(@raw_data[counter_block_offset..]).snapshot
+        counter_block = @binary_parser.parse_counter_block(
+          @raw_data[counter_block_offset..]
+        )
 
         perf_object.counter_defs.each do |counter_def|
           instance.add_counter(

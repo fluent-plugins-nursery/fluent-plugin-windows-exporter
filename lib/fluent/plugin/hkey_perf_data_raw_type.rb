@@ -88,4 +88,56 @@ module HKeyPerfDataReader
       uint32 :nameLength
     end
   end
+
+  class BinaryParser
+    include RawType
+
+    def initialize(is_little_endian: true)
+      @is_little_endian = is_little_endian
+
+      # In order to speed up the parsing, initialize each bindata first.
+      # https://github.com/dmendel/bindata/wiki/FAQ#how-do-i-speed-up-initialization
+      @data_block = PerfDataBlock.new(:endian => endian)
+      @object_type = PerfObjectType.new(:endian => endian)
+      @counter_definition = PerfCounterDefinition.new(:endian => endian)
+      @counter_block = PerfCounterBlock.new(:endian => endian)
+      @instance_definition = PerfInstanceDefinition.new(:endian => endian)
+    end
+
+    def parse_data_block(data)
+      result = @data_block.read(data).snapshot
+      @data_block.clear
+      result
+    end
+
+    def parse_object_type(data)
+      result = @object_type.read(data).snapshot
+      @object_type.clear
+      result
+    end
+
+    def parse_counter_definition(data)
+      result = @counter_definition.read(data).snapshot
+      @counter_definition.clear
+      result
+    end
+
+    def parse_counter_block(data)
+      result = @counter_block.read(data).snapshot
+      @counter_block.clear
+      result
+    end
+
+    def parse_instance_definition(data)
+      result = @instance_definition.read(data).snapshot
+      @instance_definition.clear
+      result
+    end
+
+    private
+
+    def endian
+      @is_little_endian ? :little : :big
+    end
+  end
 end
