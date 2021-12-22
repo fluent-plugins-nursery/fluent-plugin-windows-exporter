@@ -675,7 +675,7 @@ module Fluent
               "name" => "windows_net_current_bandwidth_bytes",
               "desc" => "Estimate of the interface's current bandwidth in bytes per second",
               "labels" => {"nic": name},
-              "value" => nic.counters["Current Bandwidth"].value
+              "value" => nic.counters["Current Bandwidth"].value / 8
             }
           ]
         end
