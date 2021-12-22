@@ -73,7 +73,7 @@ module ExpectedData
     {"name" => "windows_net_packets_received_total"},
     {"name" => "windows_net_packets_received_unknown_total"},
     {"name" => "windows_net_packets_sent_total"},
-    {"name" => "windows_net_current_bandwidth"},
+    {"name" => "windows_net_current_bandwidth_bytes"},
     {"name" => "windows_os_info"},
     {"name" => "windows_os_physical_memory_free_bytes"},
     {"name" => "windows_os_time"},
