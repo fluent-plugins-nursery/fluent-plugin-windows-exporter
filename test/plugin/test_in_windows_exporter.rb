@@ -251,6 +251,8 @@ class WindowsExporterInputTest < Test::Unit::TestCase
     end
 
     return prometheous_records, true
+  rescue
+    return nil, false
   end
 
   def is_same_hash?(h1, h2)
