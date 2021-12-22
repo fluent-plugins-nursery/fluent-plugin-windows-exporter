@@ -26,6 +26,26 @@ class HKeyPerfDataReaderTest < Test::Unit::TestCase
     end
   end
 
+  def test_whitelist2
+    white_list = [
+      "Processor Information",
+      "LogicalDisk",
+      "Memory",
+      "Network Interface",
+      "Paging File",
+    ]
+    reader = HKeyPerfDataReader::Reader.new(
+      object_name_whitelist: white_list
+    )
+
+    result = reader.read
+
+    assert_equal(white_list.size, result.keys.size)
+    white_list.each do |name|
+      assert(result.key?(name))
+    end
+  end
+
   def test_read_speed
     # The expected speed will change depending on the environment,
     # but want to find out if it is abnormally slow.
