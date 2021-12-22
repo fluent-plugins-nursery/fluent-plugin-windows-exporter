@@ -16,7 +16,7 @@ You'll need a Windows machine with Ruby and Git installed.
  2. Run the following commands on RubyInstaller prompt:
     ```sh
     % cd fluent-plugin-windows-exporter
-    % gem install bundler --version=2.1.4
+    % gem install bundler
     % bundle install
     ```
  3. Launch Fluentd:
@@ -30,3 +30,11 @@ You'll need a Windows machine with Ruby and Git installed.
     </match>
     % bundle exec fluentd -c test.conf
     ```
+
+## How to run the tests
+
+Test codes are in `test/plugin/`.
+
+```sh
+% bundle exec rake test
+```
