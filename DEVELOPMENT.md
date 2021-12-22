@@ -25,7 +25,7 @@ You'll need a Windows machine with Ruby and Git installed.
     <source>
       @type windows_exporter
     </source>
-    <match test.**>
+    <match windows.metrics>
       @type stdout
     </match>
     % bundle exec fluentd -c test.conf
