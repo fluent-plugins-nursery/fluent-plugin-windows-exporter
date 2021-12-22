@@ -353,224 +353,224 @@ module Fluent
           {
             "type" => "gauge",
             "name" => "windows_memory_available_bytes",
-            "desc" =>  "The amount of physical memory immediately available for allocation to a process or for system use. It is equal to the sum of memory assigned to the standby (cached), free and zero page lists (AvailableBytes)",
+            "desc" => "The amount of physical memory immediately available for allocation to a process or for system use. It is equal to the sum of memory assigned to the standby (cached), free and zero page lists",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Available Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_cache_bytes",
-            "desc" =>  "(CacheBytes)",
+            "desc" => "Number of bytes currently being used by the file system cache",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Cache Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_cache_bytes_peak",
-            "desc" =>  "(CacheBytesPeak)",
+            "desc" => "Maximum number of CacheBytes after the system was last restarted",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Cache Bytes Peak"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_cache_faults_total",
-            "desc" =>  "(CacheFaultsPersec)",
+            "desc" => "Number of faults which occur when a page sought in the file system cache is not found there and must be retrieved from elsewhere in memory (soft fault) or from disk (hard fault)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Cache Faults/sec"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_commit_limit",
-            "desc" =>  "(CommitLimit)",
+            "desc" => "Amount of virtual memory, in bytes, that can be committed without having to extend the paging file(s)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Commit Limit"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_committed_bytes",
-            "desc" =>  "(CommittedBytes)",
+            "desc" => "Amount of committed virtual memory, in bytes",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Committed Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_demand_zero_faults_total",
-            "desc" =>  "The number of zeroed pages required to satisfy faults. Zeroed pages, pages emptied of previously stored data and filled with zeros, are a security feature of Windows that prevent processes from seeing data stored by earlier processes that used the memory space (DemandZeroFaults)",
+            "desc" => "The number of zeroed pages required to satisfy faults. Zeroed pages, pages emptied of previously stored data and filled with zeros, are a security feature of Windows that prevent processes from seeing data stored by earlier processes that used the memory space",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Demand Zero Faults/sec"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_free_and_zero_page_list_bytes",
-            "desc" =>  "(FreeAndZeroPageListBytes)",
+            "desc" => "(FreeAndZeroPageListBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Free & Zero Page List Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_free_system_page_table_entries",
-            "desc" =>  "(FreeSystemPageTableEntries)",
+            "desc" => "Number of page table entries not being used by the system",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Free System Page Table Entries"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_modified_page_list_bytes",
-            "desc" =>  "(ModifiedPageListBytes)",
+            "desc" => "(ModifiedPageListBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Modified Page List Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_page_faults_total",
-            "desc" =>  "(PageFaultsPersec)",
+            "desc" => "Overall rate at which faulted pages are handled by the processor",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Page Faults/sec"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_swap_page_reads_total",
-            "desc" =>  "Number of disk page reads (a single read operation reading several pages is still only counted once) (PageReadsPersec)",
+            "desc" => "Number of disk page reads (a single read operation reading several pages is still only counted once)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Page Reads/sec"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_swap_pages_read_total",
-            "desc" =>  "Number of pages read across all page reads (ie counting all pages read even if they are read in a single operation) (PagesInputPersec)",
+            "desc" => "Number of pages read across all page reads (ie counting all pages read even if they are read in a single operation)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Pages Input/sec"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_swap_pages_written_total",
-            "desc" =>  "Number of pages written across all page writes (ie counting all pages written even if they are written in a single operation) (PagesOutputPersec)",
+            "desc" => "Number of pages written across all page writes (ie counting all pages written even if they are written in a single operation)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Pages Output/sec"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_swap_page_operations_total",
-            "desc" =>  "Total number of swap page read and writes (PagesPersec)",
+            "desc" => "Total number of swap page read and writes (PagesPersec)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Pages/sec"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_swap_page_writes_total",
-            "desc" =>  "Number of disk page writes (a single write operation writing several pages is still only counted once) (PageWritesPersec)",
+            "desc" => "Number of disk page writes (a single write operation writing several pages is still only counted once)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Page Writes/sec"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_pool_nonpaged_allocs_total",
-            "desc" =>  "The number of calls to allocate space in the nonpaged pool. The nonpaged pool is an area of system memory area for objects that cannot be written to disk, and must remain in physical memory as long as they are allocated (PoolNonpagedAllocs)",
+            "desc" => "The number of calls to allocate space in the nonpaged pool. The nonpaged pool is an area of system memory area for objects that cannot be written to disk, and must remain in physical memory as long as they are allocated",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Pool Nonpaged Allocs"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_pool_nonpaged_bytes_total",
-            "desc" =>  "(PoolNonpagedBytes)",
+            "desc" => "Number of bytes in the non-paged pool",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Pool Nonpaged Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_pool_paged_allocs_total",
-            "desc" =>  "(PoolPagedAllocs)",
+            "desc" => "Number of calls to allocate space in the paged pool, regardless of the amount of space allocated in each call",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Pool Paged Allocs"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_pool_paged_bytes",
-            "desc" =>  "(PoolPagedBytes)",
+            "desc" => "Number of bytes in the paged pool",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Pool Paged Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_pool_paged_resident_bytes",
-            "desc" =>  "(PoolPagedResidentBytes)",
+            "desc" => "(PoolPagedResidentBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Pool Paged Resident Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_standby_cache_core_bytes",
-            "desc" =>  "(StandbyCacheCoreBytes)",
+            "desc" => "(StandbyCacheCoreBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Standby Cache Core Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_standby_cache_normal_priority_bytes",
-            "desc" =>  "(StandbyCacheNormalPriorityBytes)",
+            "desc" => "(StandbyCacheNormalPriorityBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Standby Cache Normal Priority Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_standby_cache_reserve_bytes",
-            "desc" =>  "(StandbyCacheReserveBytes)",
+            "desc" => "(StandbyCacheReserveBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Standby Cache Reserve Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_system_cache_resident_bytes",
-            "desc" =>  "(SystemCacheResidentBytes)",
+            "desc" => "(SystemCacheResidentBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["System Cache Resident Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_system_code_resident_bytes",
-            "desc" =>  "(SystemCodeResidentBytes)",
+            "desc" => "(SystemCodeResidentBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["System Code Resident Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_system_code_total_bytes",
-            "desc" =>  "(SystemCodeTotalBytes)",
+            "desc" => "(SystemCodeTotalBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["System Code Total Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_system_driver_resident_bytes",
-            "desc" =>  "(SystemDriverResidentBytes)",
+            "desc" => "(SystemDriverResidentBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["System Driver Resident Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_system_driver_total_bytes",
-            "desc" =>  "(SystemDriverTotalBytes)",
+            "desc" => "(SystemDriverTotalBytes)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["System Driver Total Bytes"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_transition_faults_total",
-            "desc" =>  "(TransitionFaultsPersec)",
+            "desc" => "(TransitionFaultsPersec)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Transition Faults/sec"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_transition_pages_repurposed_total",
-            "desc" =>  "(TransitionPagesRePurposedPersec)",
+            "desc" => "(TransitionPagesRePurposedPersec)",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Transition Pages RePurposed/sec"].value
           },
           {
             "type" => "gauge",
             "name" => "windows_memory_write_copies_total",
-            "desc" =>  "The number of page faults caused by attempting to write that were satisfied by copying the page from elsewhere in physical memory (WriteCopiesPersec)",
+            "desc" => "The number of page faults caused by attempting to write that were satisfied by copying the page from elsewhere in physical memory",
             "labels" => {},
             "value" => hpd["Memory"].instances[0].counters["Write Copies/sec"].value
           }
@@ -596,84 +596,84 @@ module Fluent
             {
               "type" => "counter",
               "name" => "windows_net_bytes_received_total",
-              "desc" =>  "(Network.BytesReceivedPerSec)",
+              "desc" => "Total bytes received by interface",
               "labels" => {"nic": name},
               "value" => nic.counters["Bytes Received/sec"].value
             },
             {
               "type" => "counter",
               "name" => "windows_net_bytes_sent_total",
-              "desc" =>  "(Network.BytesSentPerSec)",
+              "desc" => "Total bytes transmitted by interface",
               "labels" => {"nic": name},
               "value" => nic.counters["Bytes Sent/sec"].value
             },
             {
               "type" => "counter",
               "name" => "windows_net_bytes_total",
-              "desc" =>  "(Network.BytesTotalPerSec)",
+              "desc" => "Total bytes received and transmitted by interface",
               "labels" => {"nic": name},
               "value" => nic.counters["Bytes Total/sec"].value
             },
             {
               "type" => "counter",
               "name" => "windows_net_packets_outbound_discarded_total",
-              "desc" =>  "(Network.PacketsOutboundDiscarded)",
+              "desc" => "Total outbound packets that were chosen to be discarded even though no errors had been detected to prevent transmission",
               "labels" => {"nic": name},
               "value" => nic.counters["Packets Outbound Discarded"].value
             },
             {
               "type" => "counter",
               "name" => "windows_net_packets_outbound_errors_total",
-              "desc" =>  "(Network.PacketsOutboundErrors)",
+              "desc" => "Total packets that could not be transmitted due to errors",
               "labels" => {"nic": name},
               "value" => nic.counters["Packets Outbound Errors"].value
             },
             {
               "type" => "counter",
               "name" => "windows_net_packets_total",
-              "desc" =>  "(Network.PacketsPerSec)",
+              "desc" => "Total packets received and transmitted by interface",
               "labels" => {"nic": name},
               "value" => nic.counters["Packets/sec"].value
             },
             {
               "type" => "counter",
               "name" => "windows_net_packets_received_discarded_total",
-              "desc" =>  "(Network.PacketsReceivedDiscarded)",
+              "desc" => "Total inbound packets that were chosen to be discarded even though no errors had been detected to prevent delivery",
               "labels" => {"nic": name},
               "value" => nic.counters["Packets Received Discarded"].value
             },
             {
               "type" => "counter",
               "name" => "windows_net_packets_received_errors_total",
-              "desc" =>  "(Network.PacketsReceivedErrors)",
+              "desc" => "Total packets that could not be received due to errors",
               "labels" => {"nic": name},
               "value" => nic.counters["Packets Received Errors"].value
             },
             {
               "type" => "counter",
               "name" => "windows_net_packets_received_total",
-              "desc" =>  "(Network.PacketsReceivedPerSec)",
+              "desc" => "Total packets received by interface",
               "labels" => {"nic": name},
               "value" => nic.counters["Packets Received/sec"].value
             },
             {
               "type" => "counter",
               "name" => "windows_net_packets_received_unknown_total",
-              "desc" =>  "(Network.PacketsReceivedUnknown)",
+              "desc" => "Total packets received by interface that were discarded because of an unknown or unsupported protocol",
               "labels" => {"nic": name},
               "value" => nic.counters["Packets Received Unknown"].value
             },
             {
               "type" => "counter",
               "name" => "windows_net_packets_sent_total",
-              "desc" =>  "(Network.PacketsSentPerSec)",
+              "desc" => "Total packets transmitted by interface",
               "labels" => {"nic": name},
               "value" => nic.counters["Packets Sent/sec"].value
             },
             {
               "type" => "gauge",
               "name" => "windows_net_current_bandwidth",
-              "desc" =>  "(Network.CurrentBandwidth)",
+              "desc" => "Estimate of the interface's current bandwidth in bytes per second",
               "labels" => {"nic": name},
               "value" => nic.counters["Current Bandwidth"].value
             }
@@ -693,7 +693,7 @@ module Fluent
           {
             "type" => "gauge",
             "name" => "windows_os_info",
-            "desc" => "OperatingSystem.Caption, OperatingSystem.Version",
+            "desc" => "Contains full product name & version in labels",
             "labels" => {
               :product => "Microsoft #{reg[:ProductName]}",
               :version => "#{work[:VersionMajor]}.#{work[:VersionMinor]}.#{reg[:CurrentBuildNumber]}"
@@ -703,35 +703,35 @@ module Fluent
           {
             "type" => "gauge",
             "name" => "windows_os_physical_memory_free_bytes",
-            "desc" => "OperatingSystem.FreePhysicalMemory",
+            "desc" => "Bytes of physical memory currently unused and available",
             "labels" => {},
             "value" => mem[:AvailPhys]
           },
           {
             "type" => "gauge",
             "name" => "windows_os_time",
-            "desc" => "OperatingSystem.LocalDateTime",
+            "desc" => "Current time as reported by the operating system, in Unix time",
             "labels" => {},
             "value" => Fluent::EventTime.now.to_f
           },
           {
             "type" => "gauge",
             "name" => "windows_os_timezone",
-            "desc" => "OperatingSystem.LocalDateTime",
+            "desc" => "Current timezone as reported by the operating system",
             "labels" => {:timezone => Time.now.strftime("%z")},
             "value" => 1.0
           },
           {
             "type" => "gauge",
             "name" => "windows_os_virtual_memory_free_bytes",
-            "desc" => "OperatingSystem.FreeVirtualMemory",
+            "desc" => "Bytes of virtual memory currently unused and available",
             "labels" => {},
             "value" => mem[:AvailPageFile]
           },
           {
             "type" => "gauge",
             "name" => "windows_os_processes_limit",
-            "desc" => "OperatingSystem.MaxNumberOfProcesses",
+            "desc" => "Maximum number of process contexts the operating system can support. The default value set by the provider is 4294967295 (0xFFFFFFFF)",
             "labels" => {},
             # prometheus-community/windows-exporter/collector/os.go#L275
             "value" => 4294967295.0
@@ -739,42 +739,42 @@ module Fluent
           {
             "type" => "gauge",
             "name" => "windows_os_process_memory_limit_bytes",
-            "desc" => "OperatingSystem.MaxProcessMemorySize",
+            "desc" => "Maximum number of bytes of memory that can be allocated to a process",
             "labels" => {},
             "value" => mem[:TotalVirtual]
           },
           {
             "type" => "gauge",
             "name" => "windows_os_processes",
-            "desc" => "OperatingSystem.NumberOfProcesses",
+            "desc" => "Number of process contexts currently loaded or running on the operating system",
             "labels" => {},
             "value" => perf[:ProcessCount]
           },
           {
             "type" => "gauge",
             "name" => "windows_os_users",
-            "desc" => "OperatingSystem.NumberOfUsers",
+            "desc" => "Number of user sessions for which the operating system is storing state information currently. For a list of current active logon sessions.",
             "labels" => {},
             "value" => work[:LoggedOnUsers]
           },
           {
             "type" => "gauge",
             "name" => "windows_os_paging_limit_bytes",
-            "desc" => "OperatingSystem.SizeStoredInPagingFiles",
+            "desc" => "Total number of bytes that can be sotred in the operating system paging files. 0 (zero) indicates that there are no paging files",
             "labels" => {},
             "value" => reg[:PagingLimitBytes]
           },
           {
             "type" => "gauge",
             "name" => "windows_os_virtual_memory_bytes",
-            "desc" => "OperatingSystem.TotalVirtualMemorySize",
+            "desc" => "Bytes of virtual memory",
             "labels" => {},
             "value" => mem[:TotalPageFile],
           },
           {
             "type" => "gauge",
             "name" => "windows_os_visible_memory_bytes",
-            "desc" => "OperatingSystem.TotalVisibleMemorySize",
+            "desc" => "Total bytes of physical memory available to the operating system. This value does not necessarily indicate the true amount of physical memory, but what is reported to the operating system as available to it",
             "labels" => {},
             "value" => mem[:TotalPhys]
           }
@@ -797,7 +797,7 @@ module Fluent
           {
             "type" => "gauge",
             "name" => "windows_os_paging_free_bytes",
-            "desc" => "OperatingSystem.FreeSpaceInPagingFiles",
+            "desc" => "Number of bytes that can be mapped into the operating system paging files without causing any other pages to be swapped out",
             "labels" => {},
             "value" =>  reg[:PagingLimitBytes] - pfusage * perf[:PageSize]
           }
