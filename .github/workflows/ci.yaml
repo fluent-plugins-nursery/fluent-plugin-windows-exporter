@@ -14,3 +14,11 @@ jobs:
         run: ridk exec bundle install
       - name: Run tests
         run: bundle exec rake test
+      - name: Build for distribution
+        run: bundle exec gem build
+      - name: Upload gem
+        uses: actions/upload-artifact@v2
+        with:
+          name: fluent-plugin-widows-exporter
+          path: |
+            *.gem
