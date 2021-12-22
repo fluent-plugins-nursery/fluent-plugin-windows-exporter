@@ -38,3 +38,12 @@ Test codes are in `test/plugin/`.
 ```sh
 % bundle exec rake test
 ```
+
+You can compare the output values with Prometheus windows exporter.
+
+* Install Prometheus windows exporter
+* Run it by ".\windows_exporter.exe --collectors.enabled="cpu,memory,logical_disk,net,os""
+* Run test codes of this plugin
+
+Then `WindowsExporterInputTest::test_record_values_with_prometheus_windows_exporter` test prints out the comparison results.  
+You can change the output threshold by editing the test code.
