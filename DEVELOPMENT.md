@@ -31,6 +31,19 @@ You'll need a Windows machine with Ruby and Git installed.
     % bundle exec fluentd -c test.conf
     ```
 
+## How to release a new version
+
+Create an annotated tag on GitHub and push gems:
+
+```sh
+$ git tag -a v1.0.0 -m v1.0.0
+$ git push origin --tags
+$ rake build
+$ gem push *.gem
+```
+
+We maintain the release announcements on GitHub. Create a new release on ["Release" page](https://github.com/fluent-plugins-nursery/fluent-plugin-windows-exporter/releases)
+
 ## How to run the tests
 
 Test codes are in `test/plugin/`.
