@@ -3,13 +3,17 @@ name: Unit test
 jobs:
   test:
     runs-on: [ windows-latest ]
-    name: Test on Windows Server
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: [ '2.7', '3.1' ]
+    name: Test on Windows Server with Ruby ${{ matrix.ruby }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7'
+          ruby-version: ${{ matrix.ruby }}
       - name: Install dependencies
         run: ridk exec bundle install
       - name: Run tests
