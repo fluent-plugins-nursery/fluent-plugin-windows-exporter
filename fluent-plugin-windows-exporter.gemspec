@@ -20,5 +20,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "test-unit", "~> 3.3"
 
   s.add_runtime_dependency "bindata", '~> 2.4'
-  s.add_runtime_dependency "fluentd", [">= 0.14.10", "< 2"]
+  s.add_runtime_dependency "fluentd", [">= 1.0.0", "< 2"]
 end
