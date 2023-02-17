@@ -2,10 +2,10 @@
 
 [Fluentd](https://fluentd.org/) plugin to collect Windows metrics.
 
- | Platform | Support Version       |
- | -------- | --------------------- |
- | Fluentd  | Fluentd v1.x          |
- | Ruby     | Ruby 2.7.x / 3.1.x    |
+ | Platform |        Support Version         |
+ |----------|--------------------------------|
+ | Fluentd  | Fluentd v1.x                   |
+ | Ruby     | Ruby 2.7.x / 3.1.x / 3.2.x     |
  | OS       | Windows Server 2008R2 or later |
 
 This is a Fluentd port of [Prometheus' Windows exporter](https://github.com/prometheus-community/windows_exporter).
