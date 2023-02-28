@@ -40,7 +40,7 @@ This plugin emits metrics as event stream, so can be used in combination with an
   scrape_interval 60   # optional
   cpu true             # optional
   memory true          # optional
-  os trues             # optional
+  os true              # optional
   net true             # optional
   logical_disk true    # optional
 </source>
