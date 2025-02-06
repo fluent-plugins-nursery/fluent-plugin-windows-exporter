@@ -9,7 +9,7 @@ jobs:
         ruby: [ '2.7', '3.1', '3.2', '3.3', '3.4' ]
     name: Test on Windows Server with Ruby ${{ matrix.ruby }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
